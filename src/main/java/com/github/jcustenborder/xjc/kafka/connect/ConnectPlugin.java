@@ -25,8 +25,8 @@ import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JFieldRef;
+import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JForEach;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 
+import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -162,8 +163,14 @@ public class ConnectPlugin extends Plugin {
     typeXMLGregorianCalendar = codeModel.ref(XMLGregorianCalendar.class);
   }
 
-  JMethod findMethod(ClassOutline classOutline, Field field) {
-    final String methodName = "get" + CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, field.fieldVar.name());
+  JMethod findMethod(JCodeModel codeModel, ClassOutline classOutline, Field field) {
+    final String methodName;
+
+    if (field.fieldVar.type().equals(codeModel.ref(Boolean.class)) || field.fieldVar.type().equals(JPrimitiveType.parse(codeModel, boolean.class.getName()))) {
+      methodName = "is" + CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, field.fieldVar.name());
+    } else {
+      methodName = "get" + CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, field.fieldVar.name());
+    }
     JMethod result = classOutline.implClass.getMethod(methodName, new JType[0]);
 
     if (null == result) {
@@ -185,14 +192,15 @@ public class ConnectPlugin extends Plugin {
     final JVar structVar = methodBody.decl(connectStructJClass, "struct", JExpr._new(connectStructJClass).arg(schemaField));
 
     for (Field field : fields) {
-      final JMethod getterMethod = findMethod(classOutline, field);
+      final JMethod getterMethod = findMethod(codeModel, classOutline, field);
 
-      Preconditions.checkNotNull(getterMethod,
-          "Could not find getter method for %s.%s",
-          classOutline.implClass.fullName(),
-          field.fieldVar.name()
-      );
-
+      if (null == getterMethod) {
+        Preconditions.checkNotNull(getterMethod,
+            "Could not find getter method for %s.%s",
+            classOutline.implClass.fullName(),
+            field.fieldVar.name()
+        );
+      }
       JInvocation invokeGetter = JExpr._this().invoke(getterMethod);
 
 
@@ -233,6 +241,15 @@ public class ConnectPlugin extends Plugin {
                 .arg(field.name)
                 .arg(invokeGetter)
         );
+      } else if (Type.XML_CALENDER == field.type) {
+
+      } else if (Type.XML_ENUM == field.type) {
+        final JInvocation invokeValue = invokeGetter.invoke("value");
+        methodBody.add(
+            structVar.invoke("put")
+                .arg(field.name)
+                .arg(invokeValue)
+        );
       }
     }
 
@@ -247,6 +264,7 @@ public class ConnectPlugin extends Plugin {
     VALUE,
     ARRAY,
     STRUCT,
+    XML_ENUM,
     XML_CALENDER;
   }
 
@@ -349,8 +367,15 @@ public class ConnectPlugin extends Plugin {
           field.type = Type.VALUE;
         } else if (jFieldVar.type() instanceof JDefinedClass) {
           JDefinedClass jDefinedClass = (JDefinedClass) jFieldVar.type();
-          field.schemaBuilder = jDefinedClass.staticRef(CONNECT_SCHEMA_FIELD);
-          field.type = Type.STRUCT;
+
+          if (null != AnnotationUtils.annotationAttributes(codeModel, jFieldVar, XmlEnum.class)) {
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("string");
+            field.type = Type.XML_ENUM;
+          } else {
+            field.schemaBuilder = jDefinedClass.staticRef(CONNECT_SCHEMA_FIELD);
+            field.type = Type.STRUCT;
+          }
+
         } else if (CLASS_JNARROWED.equals(jFieldVar.type().getClass())) {
           final JClass jClass = (JClass) jFieldVar.type();
           final JClass basis;
