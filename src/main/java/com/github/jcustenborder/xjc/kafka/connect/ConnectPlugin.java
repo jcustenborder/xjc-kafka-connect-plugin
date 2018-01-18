@@ -15,17 +15,23 @@
  */
 package com.github.jcustenborder.xjc.kafka.connect;
 
-import com.google.common.base.Strings;
-import com.sun.codemodel.JAnnotationUse;
-import com.sun.codemodel.JAnnotationValue;
+import com.google.common.base.CaseFormat;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JConditional;
+import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JFieldVar;
-import com.sun.codemodel.JFormatter;
+import com.sun.codemodel.JFieldRef;
+import com.sun.codemodel.JForEach;
+import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JPrimitiveType;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 import com.sun.tools.xjc.BadCommandLineException;
@@ -39,10 +45,13 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 
-import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.util.LinkedHashMap;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ConnectPlugin extends Plugin {
@@ -65,62 +74,15 @@ public class ConnectPlugin extends Plugin {
   }
 
   @Override
-  public void onActivated(Options opts) throws BadCommandLineException {
-    super.onActivated(opts);
-    log.info("onActivated");
-
-  }
-
-  @Override
   public void postProcessModel(Model model, ErrorHandler errorHandler) {
     super.postProcessModel(model, errorHandler);
     log.info("postProcessModel");
-
   }
 
-  final static JType VOID_TYPE = new JCodeModel().VOID;
+  static final String CONNECT_SCHEMA_FIELD = "CONNECT_SCHEMA";
 
-  Map<String, Object> attributes(JFieldVar field, Class<?> annotationClass) {
-    for (JAnnotationUse annotationUse : field.annotations()) {
-      log.trace("isRequired() - name = '{}' getAnnotationClass = '{}'", field.name(), annotationUse.getAnnotationClass().fullName());
-      if (annotationUse.getAnnotationClass().fullName().equals(annotationClass.getName())) {
-        Map<String, Object> result = new LinkedHashMap<>();
-        return result;
-      }
-    }
-    return null;
-  }
-
-  String attributeValue(JFieldVar field, Class<?> annotationClass, String param) {
-    for (JAnnotationUse annotationUse : field.annotations()) {
-      log.trace("isRequired() - name = '{}' getAnnotationClass = '{}'", field.name(), annotationUse.getAnnotationClass().fullName());
-      if (annotationUse.getAnnotationClass().fullName().equals(annotationClass.getName())) {
-        StringWriter writer = new StringWriter();
-        JFormatter formatter = new JFormatter(writer);
-        ((JAnnotationValue) annotationUse.getAnnotationMembers().get(param)).generate(formatter);
-        return writer.toString();
-      }
-    }
-    return null;
-  }
-
-  boolean isRequired(JFieldVar fieldVar) {
-    for (JAnnotationUse annotationUse : fieldVar.annotations()) {
-      log.trace("isRequired() - name = '{}' getAnnotationClass = '{}'", fieldVar.name(), annotationUse.getAnnotationClass().fullName());
-      if (annotationUse.getAnnotationClass().fullName().equals("javax.xml.bind.annotation.XmlElement")) {
-        StringWriter writer = new StringWriter();
-        JFormatter formatter = new JFormatter(writer);
-        ((JAnnotationValue) annotationUse.getAnnotationMembers().get("required")).generate(formatter);
-        return Boolean.parseBoolean(writer.toString());
-      }
-    }
-    return false;
-  }
-
-  JFieldVar processSchema(JCodeModel codeModel, ClassOutline classOutline) {
-    final Map<String, JFieldVar> fields = classOutline.implClass.fields();
-
-    final JFieldVar schemaVariable = classOutline.implClass.field(JMod.PUBLIC | JMod.STATIC | JMod.FINAL, connectSchemaJClass, "CONNECT_SCHEMA");
+  JFieldVar processSchema(JCodeModel codeModel, ClassOutline classOutline, List<Field> fields) {
+    final JFieldVar schemaVariable = classOutline.implClass.field(JMod.PUBLIC | JMod.STATIC | JMod.FINAL, connectSchemaJClass, CONNECT_SCHEMA_FIELD);
     final JMethod staticConstructor = classOutline.implClass.constructor(JMod.STATIC);
     final JBlock constructorBlock = staticConstructor.body();
     final JVar builderVar = constructorBlock.decl(connectSchemaBuilderJClass, "builder", connectSchemaBuilderJClass.staticInvoke("struct"));
@@ -130,49 +92,14 @@ public class ConnectPlugin extends Plugin {
 
     final JVar fieldBuilderVar = constructorBlock.decl(connectSchemaBuilderJClass, "fieldBuilder");
 
+    for (Field field : fields) {
+      constructorBlock.assign(fieldBuilderVar, field.schemaBuilder);
 
-    for (final Map.Entry<String, JFieldVar> field : fields.entrySet()) {
-      log.trace("processSchema() - processing name = '{}' type = '{}'", field.getKey(), field.getValue().type().name());
-      if (schemaVariable.name().equals(field.getKey())) {
-        log.trace("processSchema() - skipping '{}' cause we added it.", field.getKey());
-        continue;
-      }
-
-
-      final String attributeValue = attributeValue(field.getValue(), XmlSchemaType.class, "name");
-
-
-      if (!Strings.isNullOrEmpty(attributeValue)) {
-        switch (attributeValue) {
-          case "date":
-            constructorBlock.assign(fieldBuilderVar, connectDateJClass.staticInvoke("builder"));
-            break;
-          case "time":
-            constructorBlock.assign(fieldBuilderVar, connectTimeJClass.staticInvoke("builder"));
-            break;
-          case "dateTime":
-            constructorBlock.assign(fieldBuilderVar, connectTimestampJClass.staticInvoke("builder"));
-            break;
-          case "positiveInteger":
-            constructorBlock.assign(fieldBuilderVar, connectSchemaBuilderJClass.staticInvoke("int64"));
-            break;
-          default:
-            throw new IllegalStateException(
-                String.format("Unknown type %s", attributeValue)
-            );
-        }
-      } else {
-        constructorBlock.assign(fieldBuilderVar, connectSchemaBuilderJClass.staticInvoke("string"));
-      }
-
-
-      boolean required = isRequired(field.getValue());
-
-      if (!required) {
+      if (!field.required) {
         constructorBlock.invoke(fieldBuilderVar, "optional");
       }
 
-      constructorBlock.invoke(builderVar, "field").arg(field.getKey()).arg(fieldBuilderVar.invoke("build"));
+      constructorBlock.invoke(builderVar, "field").arg(field.name).arg(fieldBuilderVar.invoke("build"));
     }
 
 
@@ -186,35 +113,127 @@ public class ConnectPlugin extends Plugin {
   JClass connectTimestampJClass;
   JClass connectTimeJClass;
   JClass connectDateJClass;
+  JClass connectDecimalJClass;
   JClass connectSchemaBuilderJClass;
   JClass connectSchemaJClass;
+  JClass connectListOfStruct;
+
+  JClass typeList;
+  JClass typeArrayList;
+  JClass typeBigDecimal;
+  JClass typeXMLGregorianCalendar;
+  Map<JType, JExpression> typeLookup;
 
   void setupImportedClasses(JCodeModel codeModel) {
+    typeList = codeModel.ref(List.class);
+    typeArrayList = codeModel.ref(ArrayList.class);
     connectStructJClass = codeModel.ref("org.apache.kafka.connect.data.Struct");
+    connectListOfStruct = typeList.narrow(connectStructJClass);
     connectDateJClass = codeModel.ref("org.apache.kafka.connect.data.Date");
     connectTimeJClass = codeModel.ref("org.apache.kafka.connect.data.Time");
+    connectDecimalJClass = codeModel.ref("org.apache.kafka.connect.data.Decimal");
     connectTimestampJClass = codeModel.ref("org.apache.kafka.connect.data.Timestamp");
     connectSchemaBuilderJClass = codeModel.ref("org.apache.kafka.connect.data.SchemaBuilder");
     connectSchemaJClass = codeModel.ref("org.apache.kafka.connect.data.Schema");
+
+
+    Map<JType, JExpression> typeLookup = new HashMap<>();
+    typeLookup.put(JPrimitiveType.parse(codeModel, boolean.class.getName()), connectSchemaBuilderJClass.staticInvoke("boolean"));
+    typeLookup.put(codeModel.ref(Boolean.class), connectSchemaBuilderJClass.staticInvoke("boolean"));
+    typeLookup.put(JPrimitiveType.parse(codeModel, float.class.getName()), connectSchemaBuilderJClass.staticInvoke("float32"));
+    typeLookup.put(codeModel.ref(Float.class), connectSchemaBuilderJClass.staticInvoke("float32"));
+    typeLookup.put(JPrimitiveType.parse(codeModel, double.class.getName()), connectSchemaBuilderJClass.staticInvoke("float64"));
+    typeLookup.put(codeModel.ref(Double.class), connectSchemaBuilderJClass.staticInvoke("float64"));
+    typeLookup.put(JPrimitiveType.parse(codeModel, byte.class.getName()), connectSchemaBuilderJClass.staticInvoke("int8"));
+    typeLookup.put(codeModel.ref(Byte.class), connectSchemaBuilderJClass.staticInvoke("int8"));
+    typeLookup.put(JPrimitiveType.parse(codeModel, short.class.getName()), connectSchemaBuilderJClass.staticInvoke("int16"));
+    typeLookup.put(codeModel.ref(Short.class), connectSchemaBuilderJClass.staticInvoke("int16"));
+    typeLookup.put(JPrimitiveType.parse(codeModel, int.class.getName()), connectSchemaBuilderJClass.staticInvoke("int32"));
+    typeLookup.put(codeModel.ref(Integer.class), connectSchemaBuilderJClass.staticInvoke("int32"));
+    typeLookup.put(JPrimitiveType.parse(codeModel, long.class.getName()), connectSchemaBuilderJClass.staticInvoke("int64"));
+    typeLookup.put(codeModel.ref(Long.class), connectSchemaBuilderJClass.staticInvoke("int64"));
+    typeLookup.put(codeModel.ref(BigInteger.class), connectSchemaBuilderJClass.staticInvoke("int64"));
+    //TODO: This needs to be configurable some how.
+    typeLookup.put(codeModel.ref(BigDecimal.class), connectDecimalJClass.staticInvoke("builder").arg(JExpr.lit(12)));
+
+    typeLookup.put(codeModel.ref(String.class), connectSchemaBuilderJClass.staticInvoke("string"));
+    this.typeLookup = typeLookup;
+
+    typeXMLGregorianCalendar = codeModel.ref(XMLGregorianCalendar.class);
   }
 
+  JMethod findMethod(ClassOutline classOutline, Field field) {
+    final String methodName = "get" + CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, field.fieldVar.name());
+    JMethod result = classOutline.implClass.getMethod(methodName, new JType[0]);
 
-  void processToStruct(JFieldVar schemaField, JCodeModel codeModel, ClassOutline classOutline) {
-    final Map<String, JFieldVar> fields = classOutline.implClass.fields();
-    final JMethod method = classOutline.implClass.method(JMod.PUBLIC, connectStructJClass, "toStruct");
+    if (null == result) {
+      for (JMethod method : classOutline.implClass.methods()) {
+        if (methodName.equalsIgnoreCase(method.name())) {
+          result = method;
+          break;
+        }
+      }
+    }
+
+    return result;
+  }
+
+  void processToStruct(JFieldVar schemaField, JCodeModel codeModel, ClassOutline classOutline, List<Field> fields) {
+    final String STRUCT_METHOD_NAME = "toConnectStruct";
+    final JMethod method = classOutline.implClass.method(JMod.PUBLIC, connectStructJClass, STRUCT_METHOD_NAME);
     final JBlock methodBody = method.body();
     final JVar structVar = methodBody.decl(connectStructJClass, "struct", JExpr._new(connectStructJClass).arg(schemaField));
 
-    for (final Map.Entry<String, JFieldVar> field : fields.entrySet()) {
-      log.trace("processSchema() - processing name = '{}' type = '{}'", field.getKey(), field.getValue().type().name());
-      if (schemaField.name().equals(field.getKey())) {
-        log.trace("processSchema() - skipping '{}' cause we added it.", field.getKey());
-        continue;
-      }
+    for (Field field : fields) {
+      final JMethod getterMethod = findMethod(classOutline, field);
 
-      methodBody.invoke(structVar, "put")
-          .arg(field.getKey())
-          .arg(JExpr.ref(JExpr._this(), field.getKey()));
+      Preconditions.checkNotNull(getterMethod,
+          "Could not find getter method for %s.%s",
+          classOutline.implClass.fullName(),
+          field.fieldVar.name()
+      );
+
+      JInvocation invokeGetter = JExpr._this().invoke(getterMethod);
+
+
+      if (Type.ARRAY == field.type) {
+        final JConditional nullCheck = methodBody._if(JExpr._null().ne(invokeGetter));
+        final JVar structs = nullCheck._then().decl(connectListOfStruct, "structs", JExpr._new(typeArrayList));
+        final JFieldRef oField = JExpr.ref("o");
+
+        JForEach forLoop = nullCheck._then().forEach(field.arrayType, "o", invokeGetter);
+        forLoop.body().add(structs.invoke("add").arg(oField.invoke(STRUCT_METHOD_NAME)));
+
+        nullCheck._then().add(
+            structVar.invoke("put")
+                .arg(field.name)
+                .arg(structs)
+        );
+
+      } else if (Type.STRUCT == field.type) {
+        final JInvocation invokeStruct = invokeGetter.invoke(STRUCT_METHOD_NAME);
+        final JConditional nullCheck = methodBody._if(JExpr._null().ne(invokeGetter));
+        nullCheck.
+            _then()
+            .add(
+                structVar.invoke("put")
+                    .arg(field.name)
+                    .arg(invokeStruct)
+            );
+        nullCheck._else()
+            .add(
+                structVar.invoke("put")
+                    .arg(field.name)
+                    .arg(JExpr._null())
+            );
+
+      } else if (Type.VALUE == field.type) {
+        methodBody.add(
+            structVar.invoke("put")
+                .arg(field.name)
+                .arg(invokeGetter)
+        );
+      }
     }
 
     methodBody._return(structVar);
@@ -224,17 +243,183 @@ public class ConnectPlugin extends Plugin {
 
   }
 
+  enum Type {
+    VALUE,
+    ARRAY,
+    STRUCT,
+    XML_CALENDER;
+  }
+
+  static class Field {
+    public String name;
+    public JFieldVar fieldVar;
+    public boolean required;
+    public Type type;
+    public JExpression schemaBuilder;
+    public JType arrayType;
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .omitNullValues()
+          .add("name", this.name)
+          .add("required", this.required)
+          .add("type", this.type)
+          .toString();
+    }
+  }
+
+  static final Class<?> CLASS_JNARROWED;
+  static final Class<?> CLASS_JREFERENCEDCLASS;
+
+  static {
+    try {
+      CLASS_JNARROWED = Class.forName("com.sun.codemodel.JNarrowedClass");
+      CLASS_JREFERENCEDCLASS = Class.forName("com.sun.codemodel.JCodeModel$JReferencedClass");
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+
+  List<Field> fields(JCodeModel codeModel, ClassOutline classOutline) {
+    List<Field> result = new ArrayList<>();
+    final Map<String, JFieldVar> fields = classOutline.implClass.fields();
+
+    for (final Map.Entry<String, JFieldVar> kvp : fields.entrySet()) {
+      final String fieldName = kvp.getKey();
+      final JFieldVar jFieldVar = kvp.getValue();
+      log.trace("processSchema() - processing name = '{}' type = '{}'", fieldName, jFieldVar.type().name());
+
+      final Field field = new Field();
+      result.add(field);
+      field.fieldVar = jFieldVar;
+
+      final Map<String, Object> xmlElementValues = AnnotationUtils.xmlElement(codeModel, jFieldVar);
+      final Map<String, Object> xmlAttributeValues = AnnotationUtils.xmlAttribute(codeModel, jFieldVar);
+      final Map<String, Object> xmlSchemaTypeValues = AnnotationUtils.xmlSchemaType(codeModel, jFieldVar);
+
+      if (null != xmlElementValues && !xmlElementValues.isEmpty()) {
+        field.required = (boolean) xmlElementValues.getOrDefault("required", false);
+        field.name = (String) xmlElementValues.getOrDefault("name", fieldName);
+      } else if (null != xmlAttributeValues && !xmlAttributeValues.isEmpty()) {
+        field.required = (boolean) xmlAttributeValues.getOrDefault("required", false);
+        field.name = (String) xmlAttributeValues.getOrDefault("name", fieldName);
+      } else {
+        field.required = false;
+        field.name = fieldName;
+      }
+
+      Preconditions.checkNotNull(field.name, "fieldName cannot be null. %s", classOutline.implClass.fullName());
+
+      if (null != xmlSchemaTypeValues && !xmlSchemaTypeValues.isEmpty()) {
+        final String name = (String) xmlSchemaTypeValues.get("name");
+        switch (name) {
+          case "date":
+            field.schemaBuilder = connectDateJClass.staticInvoke("builder");
+            field.type = Type.VALUE;
+            break;
+          case "time":
+            field.schemaBuilder = connectTimeJClass.staticInvoke("builder");
+            field.type = Type.VALUE;
+            break;
+          case "dateTime":
+            field.schemaBuilder = connectTimestampJClass.staticInvoke("builder");
+            field.type = Type.XML_CALENDER;
+            break;
+          case "positiveInteger":
+          case "unsignedLong":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("int64");
+            field.type = Type.VALUE;
+            break;
+          case "anySimpleType":
+          case "anyURI":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("string");
+            field.type = Type.VALUE;
+            break;
+          default:
+            throw new IllegalStateException(
+                String.format("Unknown type %s", name)
+            );
+        }
+      } else {
+
+        if (typeLookup.containsKey(jFieldVar.type())) {
+          field.schemaBuilder = typeLookup.get(jFieldVar.type());
+          field.type = Type.VALUE;
+        } else if (jFieldVar.type() instanceof JDefinedClass) {
+          JDefinedClass jDefinedClass = (JDefinedClass) jFieldVar.type();
+          field.schemaBuilder = jDefinedClass.staticRef(CONNECT_SCHEMA_FIELD);
+          field.type = Type.STRUCT;
+        } else if (CLASS_JNARROWED.equals(jFieldVar.type().getClass())) {
+          final JClass jClass = (JClass) jFieldVar.type();
+          final JClass basis;
+          final List<JClass> args;
+          try {
+            Class<?> jnarrowedCls = Class.forName("com.sun.codemodel.JNarrowedClass");
+            java.lang.reflect.Field basisField = jnarrowedCls.getDeclaredField("basis");
+            basisField.setAccessible(true);
+            java.lang.reflect.Field argsField = jnarrowedCls.getDeclaredField("args");
+            argsField.setAccessible(true);
+            basis = (JClass) basisField.get(jClass);
+            args = (List<JClass>) argsField.get(jClass);
+          } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+            throw new IllegalStateException(e);
+          }
+
+          if (typeList.equals(basis)) {
+            JClass listType = args.get(0);
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("array")
+                .arg(listType.staticRef(CONNECT_SCHEMA_FIELD));
+            field.type = Type.ARRAY;
+            field.arrayType = listType;
+          } else {
+            throw new IllegalStateException(
+                String.format("%s is not supported.", basis.fullName())
+            );
+          }
+        } else if (CLASS_JREFERENCEDCLASS.equals(jFieldVar.type().getClass())) {
+          log.warn("Nothing for {}", jFieldVar.type().fullName());
+        } else {
+          throw new UnsupportedOperationException(
+              String.format(
+                  "%s is not supported.",
+                  jFieldVar.type().getClass().getName()
+              )
+          );
+        }
+      }
+
+      Preconditions.checkNotNull(field.schemaBuilder,
+          "%s.%s: %s was not handled",
+          classOutline.implClass.fullName(),
+          jFieldVar.name(),
+          jFieldVar.type().fullName()
+      );
+    }
+
+    return result;
+  }
+
+
   @Override
   public boolean run(Outline model, Options options, ErrorHandler errorHandler) throws SAXException {
     JCodeModel codeModel = model.getCodeModel();
     setupImportedClasses(codeModel);
     for (ClassOutline classOutline : model.getClasses()) {
+
       log.trace("run - {}", classOutline.implClass.name());
-      JFieldVar schemaField = processSchema(codeModel, classOutline);
-      processToStruct(schemaField, codeModel, classOutline);
-      processFromStruct(codeModel, classOutline);
+
+      List<Field> fields = fields(codeModel, classOutline);
+      log.trace("Found {} field(s). {}", fields.size(), fields);
+
+      JFieldVar schemaField = processSchema(codeModel, classOutline, fields);
+      processToStruct(schemaField, codeModel, classOutline, fields);
+//      processFromStruct(codeModel, classOutline);
     }
 
     return true;
   }
+
+
 }
