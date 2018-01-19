@@ -49,7 +49,7 @@ public class Meta {
     protected String version;
     public final static Schema CONNECT_SCHEMA;
 
-    static Meta() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Meta");
         builder.optional();

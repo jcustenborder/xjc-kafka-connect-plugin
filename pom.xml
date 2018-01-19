@@ -32,6 +32,10 @@
     <url>https://github.com/jcustenborder/kafka-connect-xml-parent</url>
     <inceptionYear>2017</inceptionYear>
     <packaging>pom</packaging>
+    <modules>
+        <module>xjc-kafka-connect-plugin</module>
+        <module>kafka-connect-xml</module>
+    </modules>
     <licenses>
         <license>
             <name>Apache License 2.0</name>
@@ -59,14 +63,13 @@
         <url>https://github.com/jcustenborder/kafka-connect-xml-parent/issues</url>
     </issueManagement>
     <properties>
+        <jaxb.version>2.2.11</jaxb.version>
         <slf4j.version>1.7.21</slf4j.version>
-        <junit.version>5.0.0-M3</junit.version>
+        <junit.version>5.0.0</junit.version>
         <guava.version>18.0</guava.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <logback.version>1.1.8</logback.version>
-        <antlr.version>4.6</antlr.version>
-        <junit.surefire.plugin.version>1.0.0-M3</junit.surefire.plugin.version>
-        <jackson.version>2.6.3</jackson.version>
+        <junit.surefire.plugin.version>1.0.0</junit.surefire.plugin.version>
         <mockito.version>1.10.19</mockito.version>
     </properties>
     <dependencies>
@@ -80,12 +83,6 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.7.21</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -148,6 +145,7 @@
                             <failsOnError>true</failsOnError>
                             <includeResources>false</includeResources>
                             <includeTestResources>false</includeTestResources>
+                            <includes>${project.basedir}/src/main</includes>
                             <excludes>${project.build.directory}/**</excludes>
                         </configuration>
                     </execution>

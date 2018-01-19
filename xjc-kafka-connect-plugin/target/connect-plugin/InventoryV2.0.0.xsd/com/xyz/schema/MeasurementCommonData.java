@@ -54,7 +54,7 @@ public class MeasurementCommonData {
     protected String unitOfMeasure;
     public final static Schema CONNECT_SCHEMA;
 
-    static MeasurementCommonData() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.MeasurementCommonData");
         builder.optional();

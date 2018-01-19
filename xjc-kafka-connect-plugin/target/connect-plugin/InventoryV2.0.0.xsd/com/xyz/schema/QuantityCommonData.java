@@ -57,7 +57,7 @@ public class QuantityCommonData {
     protected String entryMethod;
     public final static Schema CONNECT_SCHEMA;
 
-    static QuantityCommonData() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.QuantityCommonData");
         builder.optional();

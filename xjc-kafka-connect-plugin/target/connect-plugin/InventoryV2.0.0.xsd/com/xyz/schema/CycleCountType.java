@@ -191,7 +191,7 @@ public class CycleCountType {
     protected String typeCode;
     public final static Schema CONNECT_SCHEMA;
 
-    static CycleCountType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.CycleCountType");
         builder.optional();
@@ -626,8 +626,8 @@ public class CycleCountType {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link Element }
      * {@link Object }
+     * {@link Element }
      * 
      * 
      */
@@ -763,7 +763,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static AdjustmentUnitCount() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.AdjustmentUnitCount");
             builder.optional();
@@ -803,7 +803,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static BeginningUnitCount() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.BeginningUnitCount");
             builder.optional();
@@ -843,7 +843,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static CurrentUnitCount() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.CurrentUnitCount");
             builder.optional();
@@ -883,7 +883,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static EndingUnitCount() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.EndingUnitCount");
             builder.optional();
@@ -923,7 +923,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static GrossSalesUnitCount() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.GrossSalesUnitCount");
             builder.optional();
@@ -963,7 +963,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ItemID() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ItemID");
             builder.optional();
@@ -1003,7 +1003,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ReceivedUnitCount() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ReceivedUnitCount");
             builder.optional();
@@ -1043,7 +1043,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ReturnToVendorUnitCount() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ReturnToVendorUnitCount");
             builder.optional();
@@ -1083,7 +1083,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ReturnUnitCount() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ReturnUnitCount");
             builder.optional();
@@ -1123,7 +1123,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static Temperature() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.Temperature");
             builder.optional();
@@ -1163,7 +1163,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static TransferInUnitCount() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.TransferInUnitCount");
             builder.optional();
@@ -1203,7 +1203,7 @@ public class CycleCountType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static TransferOutUnitCount() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.TransferOutUnitCount");
             builder.optional();

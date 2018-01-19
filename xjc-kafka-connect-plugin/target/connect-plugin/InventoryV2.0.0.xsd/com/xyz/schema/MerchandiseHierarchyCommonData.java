@@ -50,7 +50,7 @@ public class MerchandiseHierarchyCommonData {
     protected String id;
     public final static Schema CONNECT_SCHEMA;
 
-    static MerchandiseHierarchyCommonData() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.MerchandiseHierarchyCommonData");
         builder.optional();

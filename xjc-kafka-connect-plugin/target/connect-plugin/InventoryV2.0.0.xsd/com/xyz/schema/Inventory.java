@@ -76,7 +76,7 @@ public class Inventory {
     protected String messageType;
     public final static Schema CONNECT_SCHEMA;
 
-    static Inventory() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Inventory");
         builder.optional();

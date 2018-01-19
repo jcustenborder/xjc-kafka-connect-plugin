@@ -47,7 +47,7 @@ public class Para {
     protected List<Serializable> content;
     public final static Schema CONNECT_SCHEMA;
 
-    static Para() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Para");
         builder.optional();

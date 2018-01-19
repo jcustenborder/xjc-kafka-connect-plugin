@@ -52,7 +52,7 @@ public class InventoryPositionType {
     protected List<ItemLocationType> item;
     public final static Schema CONNECT_SCHEMA;
 
-    static InventoryPositionType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.InventoryPositionType");
         builder.optional();
@@ -166,7 +166,7 @@ public class InventoryPositionType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static BusinessUnit() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.BusinessUnit");
             builder.optional();

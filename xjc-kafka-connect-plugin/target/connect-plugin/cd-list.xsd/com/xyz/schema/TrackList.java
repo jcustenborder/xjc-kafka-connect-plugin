@@ -41,7 +41,7 @@ public class TrackList {
     protected List<Track> track;
     public final static Schema CONNECT_SCHEMA;
 
-    static TrackList() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.TrackList");
         builder.optional();

@@ -73,7 +73,7 @@ public class InventoryLocationType {
     protected String location;
     public final static Schema CONNECT_SCHEMA;
 
-    static InventoryLocationType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.InventoryLocationType");
         builder.optional();
@@ -260,7 +260,7 @@ public class InventoryLocationType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static BusinessUnit() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.BusinessUnit");
             builder.optional();
@@ -305,7 +305,7 @@ public class InventoryLocationType {
         protected String level;
         public final static Schema CONNECT_SCHEMA;
 
-        static ExactLocation() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ExactLocation");
             builder.optional();

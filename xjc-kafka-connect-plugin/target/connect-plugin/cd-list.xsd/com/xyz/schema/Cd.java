@@ -67,7 +67,7 @@ public class Cd {
     protected TrackList trackList;
     public final static Schema CONNECT_SCHEMA;
 
-    static Cd() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Cd");
         builder.optional();

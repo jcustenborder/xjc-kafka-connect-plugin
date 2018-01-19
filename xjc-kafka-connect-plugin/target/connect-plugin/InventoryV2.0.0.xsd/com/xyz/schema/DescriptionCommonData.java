@@ -47,7 +47,7 @@ public class DescriptionCommonData {
     protected String typeCode;
     public final static Schema CONNECT_SCHEMA;
 
-    static DescriptionCommonData() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.DescriptionCommonData");
         builder.optional();

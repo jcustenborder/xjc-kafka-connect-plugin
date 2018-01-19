@@ -213,7 +213,7 @@ public class InventoryType {
     protected Boolean acceptedFlag;
     public final static Schema CONNECT_SCHEMA;
 
-    static InventoryType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.InventoryType");
         builder.optional();
@@ -1047,8 +1047,8 @@ public class InventoryType {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link Element }
      * {@link Object }
+     * {@link Element }
      * 
      * 
      */
@@ -1349,7 +1349,7 @@ public class InventoryType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static DateTime() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.DateTime");
             builder.optional();
@@ -1389,7 +1389,7 @@ public class InventoryType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ItemID() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ItemID");
             builder.optional();
@@ -1429,7 +1429,7 @@ public class InventoryType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static Operator() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.Operator");
             builder.optional();
@@ -1469,7 +1469,7 @@ public class InventoryType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static Quantity() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.Quantity");
             builder.optional();
@@ -1509,7 +1509,7 @@ public class InventoryType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static QuantityDispatched() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.QuantityDispatched");
             builder.optional();
@@ -1549,7 +1549,7 @@ public class InventoryType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static RequestID() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.RequestID");
             builder.optional();
@@ -1589,7 +1589,7 @@ public class InventoryType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static Response() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.Response");
             builder.optional();

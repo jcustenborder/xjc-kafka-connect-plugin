@@ -53,7 +53,7 @@ public class RequestIDCommonData {
     protected XMLGregorianCalendar timestamp;
     public final static Schema CONNECT_SCHEMA;
 
-    static RequestIDCommonData() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.RequestIDCommonData");
         builder.optional();

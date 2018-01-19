@@ -42,7 +42,7 @@ public class List {
     protected java.util.List<Recipe> recipe;
     public final static Schema CONNECT_SCHEMA;
 
-    static List() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.List");
         builder.optional();

@@ -98,7 +98,7 @@ public class InventoryItemType {
     protected String state;
     public final static Schema CONNECT_SCHEMA;
 
-    static InventoryItemType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.InventoryItemType");
         builder.optional();
@@ -430,7 +430,7 @@ public class InventoryItemType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ItemID() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ItemID");
             builder.optional();
@@ -470,7 +470,7 @@ public class InventoryItemType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static Quantity() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.Quantity");
             builder.optional();
@@ -510,7 +510,7 @@ public class InventoryItemType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ReasonCode() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ReasonCode");
             builder.optional();

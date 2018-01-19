@@ -41,7 +41,7 @@ public class ExpectedDataType {
     protected List<InventoryItemType> inventoryItem;
     public final static Schema CONNECT_SCHEMA;
 
-    static ExpectedDataType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.ExpectedDataType");
         builder.optional();

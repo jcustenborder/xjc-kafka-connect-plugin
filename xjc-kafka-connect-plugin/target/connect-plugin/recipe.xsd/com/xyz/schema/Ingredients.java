@@ -43,7 +43,7 @@ public class Ingredients {
     protected List<String> item;
     public final static Schema CONNECT_SCHEMA;
 
-    static Ingredients() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Ingredients");
         builder.optional();

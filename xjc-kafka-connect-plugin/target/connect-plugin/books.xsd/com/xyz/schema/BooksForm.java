@@ -39,7 +39,7 @@ public class BooksForm {
     protected List<BookForm> book;
     public final static Schema CONNECT_SCHEMA;
 
-    static BooksForm() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.BooksForm");
         builder.optional();

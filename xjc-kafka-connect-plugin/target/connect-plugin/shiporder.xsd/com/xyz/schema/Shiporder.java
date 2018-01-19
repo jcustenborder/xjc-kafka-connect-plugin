@@ -85,7 +85,7 @@ public class Shiporder {
     protected String orderid;
     public final static Schema CONNECT_SCHEMA;
 
-    static Shiporder() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Shiporder");
         builder.optional();
@@ -263,7 +263,7 @@ public class Shiporder {
         protected BigDecimal price;
         public final static Schema CONNECT_SCHEMA;
 
-        static Item() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.Item");
             builder.optional();
@@ -429,7 +429,7 @@ public class Shiporder {
         protected String country;
         public final static Schema CONNECT_SCHEMA;
 
-        static Shipto() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.Shipto");
             builder.optional();

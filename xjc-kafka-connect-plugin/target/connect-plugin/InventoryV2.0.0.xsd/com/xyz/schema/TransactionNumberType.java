@@ -57,7 +57,7 @@ public class TransactionNumberType {
     protected BigInteger sequenceNumber;
     public final static Schema CONNECT_SCHEMA;
 
-    static TransactionNumberType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.TransactionNumberType");
         builder.optional();
@@ -181,7 +181,7 @@ public class TransactionNumberType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static BusinessUnit() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.BusinessUnit");
             builder.optional();

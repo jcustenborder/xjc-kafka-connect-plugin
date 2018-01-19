@@ -64,7 +64,7 @@ public class Track {
     protected BigInteger no;
     public final static Schema CONNECT_SCHEMA;
 
-    static Track() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Track");
         builder.optional();

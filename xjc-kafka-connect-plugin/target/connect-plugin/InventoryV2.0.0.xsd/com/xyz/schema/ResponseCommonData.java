@@ -83,7 +83,7 @@ public class ResponseCommonData {
     protected String responseCode;
     public final static Schema CONNECT_SCHEMA;
 
-    static ResponseCommonData() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.ResponseCommonData");
         builder.optional();
@@ -306,7 +306,7 @@ public class ResponseCommonData {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static BusinessError() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.BusinessError");
             builder.optional();
@@ -346,7 +346,7 @@ public class ResponseCommonData {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ResponseDescription() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ResponseDescription");
             builder.optional();

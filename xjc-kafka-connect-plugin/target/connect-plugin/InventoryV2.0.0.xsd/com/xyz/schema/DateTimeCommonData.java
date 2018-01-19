@@ -50,7 +50,7 @@ public class DateTimeCommonData {
     protected String typeCode;
     public final static Schema CONNECT_SCHEMA;
 
-    static DateTimeCommonData() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.DateTimeCommonData");
         builder.optional();

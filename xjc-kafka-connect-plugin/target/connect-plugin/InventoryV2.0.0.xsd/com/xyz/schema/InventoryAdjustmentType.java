@@ -49,7 +49,7 @@ public class InventoryAdjustmentType {
     protected String action;
     public final static Schema CONNECT_SCHEMA;
 
-    static InventoryAdjustmentType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.InventoryAdjustmentType");
         builder.optional();

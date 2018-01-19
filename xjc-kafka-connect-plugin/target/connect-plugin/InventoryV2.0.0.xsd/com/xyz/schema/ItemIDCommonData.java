@@ -55,7 +55,7 @@ public class ItemIDCommonData {
     protected String type;
     public final static Schema CONNECT_SCHEMA;
 
-    static ItemIDCommonData() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.ItemIDCommonData");
         builder.optional();

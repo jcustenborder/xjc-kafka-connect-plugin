@@ -61,7 +61,7 @@ public class BusinessErrorCommonData {
     protected String severity;
     public final static Schema CONNECT_SCHEMA;
 
-    static BusinessErrorCommonData() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.BusinessErrorCommonData");
         builder.optional();

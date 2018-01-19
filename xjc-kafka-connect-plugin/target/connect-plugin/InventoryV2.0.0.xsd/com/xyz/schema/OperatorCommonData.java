@@ -50,7 +50,7 @@ public class OperatorCommonData {
     protected String operatorType;
     public final static Schema CONNECT_SCHEMA;
 
-    static OperatorCommonData() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.OperatorCommonData");
         builder.optional();

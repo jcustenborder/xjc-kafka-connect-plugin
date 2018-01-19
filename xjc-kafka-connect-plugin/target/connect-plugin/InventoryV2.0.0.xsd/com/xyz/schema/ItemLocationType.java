@@ -82,7 +82,7 @@ public class ItemLocationType {
     protected String state;
     public final static Schema CONNECT_SCHEMA;
 
-    static ItemLocationType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.ItemLocationType");
         builder.optional();
@@ -318,7 +318,7 @@ public class ItemLocationType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static DateTime() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.DateTime");
             builder.optional();
@@ -358,7 +358,7 @@ public class ItemLocationType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ItemID() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ItemID");
             builder.optional();
@@ -398,7 +398,7 @@ public class ItemLocationType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static Quantity() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.Quantity");
             builder.optional();

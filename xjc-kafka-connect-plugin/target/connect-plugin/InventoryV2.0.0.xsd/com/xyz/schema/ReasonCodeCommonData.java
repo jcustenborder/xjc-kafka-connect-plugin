@@ -48,7 +48,7 @@ public class ReasonCodeCommonData {
     protected String name;
     public final static Schema CONNECT_SCHEMA;
 
-    static ReasonCodeCommonData() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.ReasonCodeCommonData");
         builder.optional();

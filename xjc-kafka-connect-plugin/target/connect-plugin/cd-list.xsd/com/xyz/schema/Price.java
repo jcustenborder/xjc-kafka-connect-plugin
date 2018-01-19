@@ -45,7 +45,7 @@ public class Price {
     protected String currency;
     public final static Schema CONNECT_SCHEMA;
 
-    static Price() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Price");
         builder.optional();

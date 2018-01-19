@@ -50,7 +50,7 @@ public class ScopeType {
     protected ScopeType.MerchandiseHierarchy merchandiseHierarchy;
     public final static Schema CONNECT_SCHEMA;
 
-    static ScopeType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.ScopeType");
         builder.optional();
@@ -150,7 +150,7 @@ public class ScopeType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static MerchandiseHierarchy() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.MerchandiseHierarchy");
             builder.optional();

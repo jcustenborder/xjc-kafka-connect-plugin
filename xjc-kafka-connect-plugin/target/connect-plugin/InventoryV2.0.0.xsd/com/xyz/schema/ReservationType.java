@@ -54,7 +54,7 @@ public class ReservationType {
     protected String reservationID;
     public final static Schema CONNECT_SCHEMA;
 
-    static ReservationType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.ReservationType");
         builder.optional();
@@ -179,7 +179,7 @@ public class ReservationType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static BusinessUnit() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.BusinessUnit");
             builder.optional();

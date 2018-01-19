@@ -47,7 +47,7 @@ public class Bullet {
     protected List<Serializable> content;
     public final static Schema CONNECT_SCHEMA;
 
-    static Bullet() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Bullet");
         builder.optional();

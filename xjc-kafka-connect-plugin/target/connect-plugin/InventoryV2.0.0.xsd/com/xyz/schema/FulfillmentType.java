@@ -61,7 +61,7 @@ public class FulfillmentType {
     protected FulfillmentType.Quantity quantity;
     public final static Schema CONNECT_SCHEMA;
 
-    static FulfillmentType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.FulfillmentType");
         builder.optional();
@@ -194,7 +194,7 @@ public class FulfillmentType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ItemID() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ItemID");
             builder.optional();
@@ -234,7 +234,7 @@ public class FulfillmentType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static Quantity() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.Quantity");
             builder.optional();

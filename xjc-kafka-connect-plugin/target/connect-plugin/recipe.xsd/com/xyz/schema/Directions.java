@@ -48,7 +48,7 @@ public class Directions {
     protected List<Object> paraOrBullet;
     public final static Schema CONNECT_SCHEMA;
 
-    static Directions() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Directions");
         builder.optional();

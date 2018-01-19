@@ -45,14 +45,14 @@ import org.apache.kafka.connect.data.Struct;
 public class Description {
 
     @XmlElementRefs({
-        @XmlElementRef(name = "heading", namespace = "http://edutechwiki.unige.ch/en/XML/", type = JAXBElement.class, required = false),
-        @XmlElementRef(name = "p", namespace = "http://edutechwiki.unige.ch/en/XML/", type = JAXBElement.class, required = false)
+        @XmlElementRef(name = "p", namespace = "http://edutechwiki.unige.ch/en/XML/", type = JAXBElement.class, required = false),
+        @XmlElementRef(name = "heading", namespace = "http://edutechwiki.unige.ch/en/XML/", type = JAXBElement.class, required = false)
     })
     @XmlMixed
     protected List<Serializable> content;
     public final static Schema CONNECT_SCHEMA;
 
-    static Description() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Description");
         builder.optional();
@@ -82,8 +82,8 @@ public class Description {
      * <p>
      * Objects of the following type(s) are allowed in the list
      * {@link JAXBElement }{@code <}{@link String }{@code >}
-     * {@link JAXBElement }{@code <}{@link String }{@code >}
      * {@link String }
+     * {@link JAXBElement }{@code <}{@link String }{@code >}
      * 
      * 
      */

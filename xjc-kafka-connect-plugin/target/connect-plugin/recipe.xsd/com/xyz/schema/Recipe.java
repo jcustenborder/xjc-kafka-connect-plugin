@@ -61,7 +61,7 @@ public class Recipe {
     protected Directions directions;
     public final static Schema CONNECT_SCHEMA;
 
-    static Recipe() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.Recipe");
         builder.optional();

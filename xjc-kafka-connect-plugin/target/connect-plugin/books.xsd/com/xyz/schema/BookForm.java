@@ -66,7 +66,7 @@ public class BookForm {
     protected String id;
     public final static Schema CONNECT_SCHEMA;
 
-    static BookForm() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.BookForm");
         builder.optional();

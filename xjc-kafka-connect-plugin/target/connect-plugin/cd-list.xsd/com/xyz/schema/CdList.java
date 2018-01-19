@@ -49,7 +49,7 @@ public class CdList {
     protected List<Cd> cd;
     public final static Schema CONNECT_SCHEMA;
 
-    static CdList() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.CdList");
         builder.optional();

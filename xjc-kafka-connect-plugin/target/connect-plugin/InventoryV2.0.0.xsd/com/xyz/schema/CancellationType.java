@@ -79,7 +79,7 @@ public class CancellationType {
     protected CancellationType.Quantity quantity;
     public final static Schema CONNECT_SCHEMA;
 
-    static CancellationType() {
+    static {
         SchemaBuilder builder = SchemaBuilder.struct();
         builder.name("com.xyz.schema.CancellationType");
         builder.optional();
@@ -244,7 +244,7 @@ public class CancellationType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static DateTime() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.DateTime");
             builder.optional();
@@ -284,7 +284,7 @@ public class CancellationType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ItemID() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ItemID");
             builder.optional();
@@ -324,7 +324,7 @@ public class CancellationType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static Quantity() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.Quantity");
             builder.optional();
@@ -364,7 +364,7 @@ public class CancellationType {
 
         public final static Schema CONNECT_SCHEMA;
 
-        static ReasonCode() {
+        static {
             SchemaBuilder builder = SchemaBuilder.struct();
             builder.name("com.xyz.schema.ReasonCode");
             builder.optional();
