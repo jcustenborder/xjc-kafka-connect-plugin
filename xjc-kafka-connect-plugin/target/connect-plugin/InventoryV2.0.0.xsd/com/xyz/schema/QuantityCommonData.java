@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -45,7 +46,9 @@ import org.apache.kafka.connect.data.Struct;
     com.xyz.schema.InventoryItemType.Quantity.class,
     com.xyz.schema.ItemLocationType.Quantity.class
 })
-public class QuantityCommonData {
+public class QuantityCommonData
+    implements Connectable
+{
 
     @XmlValue
     protected BigDecimal value;
@@ -185,6 +188,7 @@ public class QuantityCommonData {
         this.entryMethod = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("value", this.getValue());

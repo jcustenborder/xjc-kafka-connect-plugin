@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -145,7 +146,9 @@ import org.w3c.dom.Element;
     "transactionNumber",
     "any"
 })
-public class InventoryType {
+public class InventoryType
+    implements Connectable
+{
 
     @XmlElement(name = "RequestID")
     protected InventoryType.RequestID requestID;
@@ -1167,6 +1170,7 @@ public class InventoryType {
         this.acceptedFlag = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getRequestID()) {
@@ -1345,6 +1349,7 @@ public class InventoryType {
     @XmlType(name = "")
     public static class DateTime
         extends DateTimeCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1357,6 +1362,7 @@ public class InventoryType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -1385,6 +1391,7 @@ public class InventoryType {
     @XmlType(name = "")
     public static class ItemID
         extends ItemIDCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1397,6 +1404,7 @@ public class InventoryType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -1425,6 +1433,7 @@ public class InventoryType {
     @XmlType(name = "")
     public static class Operator
         extends OperatorCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1437,6 +1446,7 @@ public class InventoryType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -1465,6 +1475,7 @@ public class InventoryType {
     @XmlType(name = "")
     public static class Quantity
         extends QuantityCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1477,6 +1488,7 @@ public class InventoryType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -1505,6 +1517,7 @@ public class InventoryType {
     @XmlType(name = "")
     public static class QuantityDispatched
         extends QuantityCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1517,6 +1530,7 @@ public class InventoryType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -1545,6 +1559,7 @@ public class InventoryType {
     @XmlType(name = "")
     public static class RequestID
         extends RequestIDCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1557,6 +1572,7 @@ public class InventoryType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -1585,6 +1601,7 @@ public class InventoryType {
     @XmlType(name = "")
     public static class Response
         extends ResponseCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1597,6 +1614,7 @@ public class InventoryType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;

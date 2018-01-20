@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 //import org.jvnet.jaxb2_commons.plugin.Customizations;
 
 
@@ -107,6 +108,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
   JClass connectSchemaJClass;
   JClass connectListOfStructJClass;
   JClass connectableJClass;
+  JClass timezoneJClass;
 
   JClass typeList;
   JClass typeArrayList;
@@ -125,8 +127,8 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     connectTimestampJClass = codeModel.ref("org.apache.kafka.connect.data.Timestamp");
     connectSchemaBuilderJClass = codeModel.ref("org.apache.kafka.connect.data.SchemaBuilder");
     connectSchemaJClass = codeModel.ref("org.apache.kafka.connect.data.Schema");
-    connectableJClass = codeModel.ref("com.github.jcustenborder.xjc.kafka.connect.Connectable");
-
+    connectableJClass = codeModel.ref("com.github.jcustenborder.kafka.connect.xml.Connectable");
+    timezoneJClass = codeModel.ref(TimeZone.class);
 
     Map<JType, JExpression> typeLookup = new HashMap<>();
     typeLookup.put(JPrimitiveType.parse(codeModel, boolean.class.getName()), connectSchemaBuilderJClass.staticInvoke("boolean"));
@@ -180,6 +182,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
   void processToStruct(JFieldVar schemaField, JCodeModel codeModel, ClassOutline classOutline, List<Field> fields) {
 
     final JMethod method = classOutline.implClass.method(JMod.PUBLIC, connectStructJClass, STRUCT_METHOD_NAME);
+    method.annotate(Override.class);
     final JBlock methodBody = method.body();
     final JVar structVar = methodBody.decl(connectStructJClass, "struct", JExpr._new(connectStructJClass).arg(schemaField));
 
@@ -230,7 +233,32 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
                 .arg(invokeGetter)
         );
       } else if (Type.XML_CALENDER == field.type) {
+        final JConditional nullCheck = methodBody._if(JExpr._null().ne(invokeGetter));
+        final JInvocation invokeGetTime = invokeGetter.invoke("toGregorianCalendar")
+            .arg(codeModel.ref(TimeZone.class).staticInvoke("getTimeZone").arg("UTC"))
+            .arg(JExpr._null())
+            .arg(JExpr._null())
+            .invoke("getTime");
 
+
+        nullCheck._then()
+            .add(structVar.invoke("put")
+                .arg(field.name)
+                .arg(invokeGetTime)
+            );
+
+        nullCheck._else()
+            .add(structVar.invoke("put")
+                .arg(field.name)
+                .arg(JExpr._null()));
+
+
+      } else if (Type.VALUE == field.type) {
+        methodBody.add(
+            structVar.invoke("put")
+                .arg(field.name)
+                .arg(invokeGetter)
+        );
       } else if (Type.XML_ENUM == field.type) {
         final JInvocation invokeValue = invokeGetter.invoke("value");
         methodBody.add(
@@ -323,11 +351,11 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         switch (name) {
           case "date":
             field.schemaBuilder = connectDateJClass.staticInvoke("builder");
-            field.type = Type.VALUE;
+            field.type = Type.XML_CALENDER;
             break;
           case "time":
             field.schemaBuilder = connectTimeJClass.staticInvoke("builder");
-            field.type = Type.VALUE;
+            field.type = Type.XML_CALENDER;
             break;
           case "dateTime":
             field.schemaBuilder = connectTimestampJClass.staticInvoke("builder");
@@ -420,7 +448,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     JCodeModel codeModel = model.getCodeModel();
     setupImportedClasses(codeModel);
     for (ClassOutline classOutline : model.getClasses()) {
-//      classOutline.implClass._implements(this.connectableJClass);
+      classOutline.implClass._implements(this.connectableJClass);
       log.trace("run - {}", classOutline.implClass.name());
 
       List<Field> fields = fields(codeModel, classOutline);

@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -39,7 +40,9 @@ import org.apache.kafka.connect.data.Struct;
     "inventoryPosition",
     "adjustmentQuantity"
 })
-public class InventoryAdjustmentType {
+public class InventoryAdjustmentType
+    implements Connectable
+{
 
     @XmlElement(name = "InventoryPosition")
     protected List<InventoryPositionType> inventoryPosition;
@@ -146,6 +149,7 @@ public class InventoryAdjustmentType {
         this.action = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getInventoryPosition()) {

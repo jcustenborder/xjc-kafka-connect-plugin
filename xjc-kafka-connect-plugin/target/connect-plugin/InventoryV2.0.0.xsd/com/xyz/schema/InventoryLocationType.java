@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -61,7 +62,9 @@ import org.apache.kafka.connect.data.Struct;
     "sellingLocation",
     "exactLocation"
 })
-public class InventoryLocationType {
+public class InventoryLocationType
+    implements Connectable
+{
 
     @XmlElement(name = "BusinessUnit")
     protected List<InventoryLocationType.BusinessUnit> businessUnit;
@@ -208,6 +211,7 @@ public class InventoryLocationType {
         this.location = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getBusinessUnit()) {
@@ -256,6 +260,7 @@ public class InventoryLocationType {
     @XmlType(name = "")
     public static class BusinessUnit
         extends BusinessUnitCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -268,6 +273,7 @@ public class InventoryLocationType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -297,7 +303,9 @@ public class InventoryLocationType {
     @XmlType(name = "", propOrder = {
         "value"
     })
-    public static class ExactLocation {
+    public static class ExactLocation
+        implements Connectable
+    {
 
         @XmlValue
         protected String value;
@@ -367,6 +375,7 @@ public class InventoryLocationType {
             this.level = value;
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             struct.put("value", this.getValue());

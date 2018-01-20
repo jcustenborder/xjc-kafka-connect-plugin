@@ -3,6 +3,7 @@ package com.xyz.schema;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -11,6 +12,7 @@ import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -66,7 +68,9 @@ import org.apache.kafka.connect.data.Timestamp;
 @XmlSeeAlso({
     com.xyz.schema.InventoryType.Response.class
 })
-public class ResponseCommonData {
+public class ResponseCommonData
+    implements Connectable
+{
 
     @XmlElement(name = "RequestID", required = true)
     protected String requestID;
@@ -261,10 +265,16 @@ public class ResponseCommonData {
         this.responseCode = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("RequestID", this.getRequestID());
         struct.put("ResponderID", this.getResponderID());
+        if (null!= this.getResponseTimestamp()) {
+            struct.put("ResponseTimestamp", this.getResponseTimestamp().toGregorianCalendar(TimeZone.getTimeZone("UTC"), null, null).getTime());
+        } else {
+            struct.put("ResponseTimestamp", null);
+        }
         if (null!= this.getResponseDescription()) {
             struct.put("ResponseDescription", this.getResponseDescription().toConnectStruct());
         } else {
@@ -302,6 +312,7 @@ public class ResponseCommonData {
     @XmlType(name = "")
     public static class BusinessError
         extends BusinessErrorCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -314,6 +325,7 @@ public class ResponseCommonData {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -342,6 +354,7 @@ public class ResponseCommonData {
     @XmlType(name = "")
     public static class ResponseDescription
         extends DescriptionCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -354,6 +367,7 @@ public class ResponseCommonData {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;

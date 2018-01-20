@@ -3,6 +3,7 @@ package com.xyz.schema;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -10,6 +11,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Date;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -75,7 +77,9 @@ import org.apache.kafka.connect.data.Struct;
     "reasonCode",
     "toLocation"
 })
-public class InventoryItemType {
+public class InventoryItemType
+    implements Connectable
+{
 
     @XmlElement(name = "ItemID")
     protected InventoryItemType.ItemID itemID;
@@ -359,6 +363,7 @@ public class InventoryItemType {
         this.state = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getItemID()) {
@@ -385,7 +390,11 @@ public class InventoryItemType {
         } else {
             struct.put("FromLocation", null);
         }
-        struct.put("PlannedDate", this.getPlannedDate());
+        if (null!= this.getPlannedDate()) {
+            struct.put("PlannedDate", this.getPlannedDate().toGregorianCalendar(TimeZone.getTimeZone("UTC"), null, null).getTime());
+        } else {
+            struct.put("PlannedDate", null);
+        }
         if (null!= this.getQuantity()) {
             struct.put("Quantity", this.getQuantity().toConnectStruct());
         } else {
@@ -426,6 +435,7 @@ public class InventoryItemType {
     @XmlType(name = "")
     public static class ItemID
         extends ItemIDCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -438,6 +448,7 @@ public class InventoryItemType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -466,6 +477,7 @@ public class InventoryItemType {
     @XmlType(name = "")
     public static class Quantity
         extends QuantityCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -478,6 +490,7 @@ public class InventoryItemType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -506,6 +519,7 @@ public class InventoryItemType {
     @XmlType(name = "")
     public static class ReasonCode
         extends ReasonCodeCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -518,6 +532,7 @@ public class InventoryItemType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;

@@ -111,7 +111,7 @@
                             <verbose>true</verbose>
                             <episode>false</episode>
                             <debug>false</debug>
-                            <schemaDirectory>src/test/resources/com/github/jcustenborder/xjc/kafka/connect</schemaDirectory>
+                            <schemaDirectory>src/test/resources/com/github/jcustenborder/kafka/connect/xml</schemaDirectory>
                             <schemaIncludes>
                                 <include>*.xsd</include>
                             </schemaIncludes>

@@ -53,14 +53,15 @@ public class KafkaConnectPluginTest {
           // Setup schema compiler
           SchemaCompiler sc = XJC.createSchemaCompiler();
           Options options = sc.getOptions();
+
           options.activePlugins.add(new KafkaConnectPlugin());
+
 
           sc.forcePackageName("com.xyz.schema");
           InputSource is = new InputSource(schemaFile.toURI().toString());
 
           sc.parseSchema(is);
           S2JJAXBModel model = sc.bind();
-
           JCodeModel jCodeModel = model.generateCode(null, null);
           jCodeModel.build(outputDirectory);
         }));

@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -41,7 +42,9 @@ import org.apache.kafka.connect.data.Struct;
     "cd"
 })
 @XmlRootElement(name = "cd-list")
-public class CdList {
+public class CdList
+    implements Connectable
+{
 
     @XmlElement(required = true)
     protected String title;
@@ -142,6 +145,7 @@ public class CdList {
         return this.cd;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("title", this.getTitle());

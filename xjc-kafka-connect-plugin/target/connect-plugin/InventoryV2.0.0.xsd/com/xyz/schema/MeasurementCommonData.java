@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -46,7 +47,9 @@ import org.apache.kafka.connect.data.Struct;
     com.xyz.schema.CycleCountType.EndingUnitCount.class,
     com.xyz.schema.CycleCountType.Temperature.class
 })
-public class MeasurementCommonData {
+public class MeasurementCommonData
+    implements Connectable
+{
 
     @XmlValue
     protected float value;
@@ -108,6 +111,7 @@ public class MeasurementCommonData {
         this.unitOfMeasure = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("value", this.getValue());

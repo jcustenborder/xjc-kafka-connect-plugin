@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -40,7 +41,9 @@ import org.apache.kafka.connect.data.Struct;
 @XmlSeeAlso({
     com.xyz.schema.ScopeType.MerchandiseHierarchy.class
 })
-public class MerchandiseHierarchyCommonData {
+public class MerchandiseHierarchyCommonData
+    implements Connectable
+{
 
     @XmlValue
     protected String value;
@@ -139,6 +142,7 @@ public class MerchandiseHierarchyCommonData {
         this.id = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("value", this.getValue());

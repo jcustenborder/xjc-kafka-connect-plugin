@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -39,7 +40,9 @@ import org.apache.kafka.connect.data.Struct;
     "paraOrBullet"
 })
 @XmlRootElement(name = "directions")
-public class Directions {
+public class Directions
+    implements Connectable
+{
 
     @XmlElements({
         @XmlElement(name = "para", type = Para.class),
@@ -89,6 +92,7 @@ public class Directions {
         return this.paraOrBullet;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getParaOrBullet()) {

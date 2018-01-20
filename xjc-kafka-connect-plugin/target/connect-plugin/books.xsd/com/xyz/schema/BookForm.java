@@ -1,6 +1,7 @@
 
 package com.xyz.schema;
 
+import java.util.TimeZone;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -8,6 +9,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Date;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -48,7 +50,9 @@ import org.apache.kafka.connect.data.Struct;
     "pubDate",
     "review"
 })
-public class BookForm {
+public class BookForm
+    implements Connectable
+{
 
     @XmlElement(required = true)
     protected String author;
@@ -250,13 +254,18 @@ public class BookForm {
         this.id = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("author", this.getAuthor());
         struct.put("title", this.getTitle());
         struct.put("genre", this.getGenre());
         struct.put("price", this.getPrice());
-        struct.put("pub_date", this.getPubDate());
+        if (null!= this.getPubDate()) {
+            struct.put("pub_date", this.getPubDate().toGregorianCalendar(TimeZone.getTimeZone("UTC"), null, null).getTime());
+        } else {
+            struct.put("pub_date", null);
+        }
         struct.put("review", this.getReview());
         struct.put("id", this.getId());
         return struct;

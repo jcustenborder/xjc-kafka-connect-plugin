@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -45,7 +46,9 @@ import org.apache.kafka.connect.data.Struct;
     "directions"
 })
 @XmlRootElement(name = "recipe")
-public class Recipe {
+public class Recipe
+    implements Connectable
+{
 
     @XmlElement(required = true)
     protected Meta meta;
@@ -226,6 +229,7 @@ public class Recipe {
         this.directions = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getMeta()) {

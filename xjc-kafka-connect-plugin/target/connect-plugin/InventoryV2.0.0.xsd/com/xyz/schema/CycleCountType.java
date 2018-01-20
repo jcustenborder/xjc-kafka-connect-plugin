@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -153,7 +154,9 @@ import org.w3c.dom.Element;
     "temperature",
     "any"
 })
-public class CycleCountType {
+public class CycleCountType
+    implements Connectable
+{
 
     @XmlElement(name = "CycleCountID", required = true)
     protected String cycleCountID;
@@ -662,6 +665,7 @@ public class CycleCountType {
         this.typeCode = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("CycleCountID", this.getCycleCountID());
@@ -759,6 +763,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class AdjustmentUnitCount
         extends MeasurementCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -771,6 +776,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -799,6 +805,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class BeginningUnitCount
         extends MeasurementCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -811,6 +818,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -839,6 +847,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class CurrentUnitCount
         extends MeasurementCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -851,6 +860,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -879,6 +889,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class EndingUnitCount
         extends MeasurementCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -891,6 +902,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -919,6 +931,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class GrossSalesUnitCount
         extends MeasurementCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -931,6 +944,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -959,6 +973,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class ItemID
         extends ItemIDCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -971,6 +986,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -999,6 +1015,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class ReceivedUnitCount
         extends MeasurementCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1011,6 +1028,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -1039,6 +1057,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class ReturnToVendorUnitCount
         extends MeasurementCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1051,6 +1070,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -1079,6 +1099,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class ReturnUnitCount
         extends MeasurementCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1091,6 +1112,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -1119,6 +1141,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class Temperature
         extends MeasurementCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1131,6 +1154,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -1159,6 +1183,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class TransferInUnitCount
         extends MeasurementCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1171,6 +1196,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -1199,6 +1225,7 @@ public class CycleCountType {
     @XmlType(name = "")
     public static class TransferOutUnitCount
         extends MeasurementCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -1211,6 +1238,7 @@ public class CycleCountType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;

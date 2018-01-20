@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -36,7 +37,9 @@ import org.apache.kafka.connect.data.Struct;
     "content"
 })
 @XmlRootElement(name = "price")
-public class Price {
+public class Price
+    implements Connectable
+{
 
     @XmlValue
     protected String content;
@@ -111,6 +114,7 @@ public class Price {
         this.currency = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("content", this.getContent());

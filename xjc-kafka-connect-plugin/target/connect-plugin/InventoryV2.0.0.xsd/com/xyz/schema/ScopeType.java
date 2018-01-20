@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -42,7 +43,9 @@ import org.apache.kafka.connect.data.Struct;
     "inventoryLocation",
     "merchandiseHierarchy"
 })
-public class ScopeType {
+public class ScopeType
+    implements Connectable
+{
 
     @XmlElement(name = "InventoryLocation", required = true)
     protected InventoryLocationType inventoryLocation;
@@ -110,6 +113,7 @@ public class ScopeType {
         this.merchandiseHierarchy = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getInventoryLocation()) {
@@ -146,6 +150,7 @@ public class ScopeType {
     @XmlType(name = "")
     public static class MerchandiseHierarchy
         extends MerchandiseHierarchyCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -158,6 +163,7 @@ public class ScopeType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;

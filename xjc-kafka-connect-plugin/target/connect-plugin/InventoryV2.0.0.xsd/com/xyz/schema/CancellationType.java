@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -67,7 +68,9 @@ import org.apache.kafka.connect.data.Struct;
     "itemID",
     "quantity"
 })
-public class CancellationType {
+public class CancellationType
+    implements Connectable
+{
 
     @XmlElement(name = "DateTime")
     protected CancellationType.DateTime dateTime;
@@ -194,6 +197,7 @@ public class CancellationType {
         this.quantity = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getDateTime()) {
@@ -240,6 +244,7 @@ public class CancellationType {
     @XmlType(name = "")
     public static class DateTime
         extends DateTimeCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -252,6 +257,7 @@ public class CancellationType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -280,6 +286,7 @@ public class CancellationType {
     @XmlType(name = "")
     public static class ItemID
         extends ItemIDCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -292,6 +299,7 @@ public class CancellationType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -320,6 +328,7 @@ public class CancellationType {
     @XmlType(name = "")
     public static class Quantity
         extends QuantityCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -332,6 +341,7 @@ public class CancellationType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -360,6 +370,7 @@ public class CancellationType {
     @XmlType(name = "")
     public static class ReasonCode
         extends ReasonCodeCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -372,6 +383,7 @@ public class CancellationType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;

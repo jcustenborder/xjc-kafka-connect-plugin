@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -39,7 +40,9 @@ import org.apache.kafka.connect.data.Struct;
     "version"
 })
 @XmlRootElement(name = "meta")
-public class Meta {
+public class Meta
+    implements Connectable
+{
 
     @XmlElement(required = true)
     protected String author;
@@ -135,6 +138,7 @@ public class Meta {
         this.version = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("author", this.getAuthor());

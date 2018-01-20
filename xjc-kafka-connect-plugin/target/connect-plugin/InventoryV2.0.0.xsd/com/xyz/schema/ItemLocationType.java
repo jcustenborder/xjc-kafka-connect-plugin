@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -66,7 +67,9 @@ import org.apache.kafka.connect.data.Struct;
     "dateTime",
     "disposition"
 })
-public class ItemLocationType {
+public class ItemLocationType
+    implements Connectable
+{
 
     @XmlElement(name = "ItemID")
     protected ItemLocationType.ItemID itemID;
@@ -262,6 +265,7 @@ public class ItemLocationType {
         this.state = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getItemID()) {
@@ -314,6 +318,7 @@ public class ItemLocationType {
     @XmlType(name = "")
     public static class DateTime
         extends DateTimeCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -326,6 +331,7 @@ public class ItemLocationType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -354,6 +360,7 @@ public class ItemLocationType {
     @XmlType(name = "")
     public static class ItemID
         extends ItemIDCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -366,6 +373,7 @@ public class ItemLocationType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -394,6 +402,7 @@ public class ItemLocationType {
     @XmlType(name = "")
     public static class Quantity
         extends QuantityCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -406,6 +415,7 @@ public class ItemLocationType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;

@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -38,7 +39,9 @@ import org.apache.kafka.connect.data.Struct;
     com.xyz.schema.CancellationType.ReasonCode.class,
     com.xyz.schema.InventoryItemType.ReasonCode.class
 })
-public class ReasonCodeCommonData {
+public class ReasonCodeCommonData
+    implements Connectable
+{
 
     @XmlValue
     protected String value;
@@ -137,6 +140,7 @@ public class ReasonCodeCommonData {
         this.name = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("value", this.getValue());

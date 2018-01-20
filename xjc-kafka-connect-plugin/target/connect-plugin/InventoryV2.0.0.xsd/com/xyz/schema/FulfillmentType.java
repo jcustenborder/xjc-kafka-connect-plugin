@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -51,7 +52,9 @@ import org.apache.kafka.connect.data.Struct;
     "inventoryLocation",
     "quantity"
 })
-public class FulfillmentType {
+public class FulfillmentType
+    implements Connectable
+{
 
     @XmlElement(name = "ItemID", required = true)
     protected FulfillmentType.ItemID itemID;
@@ -149,6 +152,7 @@ public class FulfillmentType {
         this.quantity = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getItemID()) {
@@ -190,6 +194,7 @@ public class FulfillmentType {
     @XmlType(name = "")
     public static class ItemID
         extends ItemIDCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -202,6 +207,7 @@ public class FulfillmentType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
@@ -230,6 +236,7 @@ public class FulfillmentType {
     @XmlType(name = "")
     public static class Quantity
         extends QuantityCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -242,6 +249,7 @@ public class FulfillmentType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;

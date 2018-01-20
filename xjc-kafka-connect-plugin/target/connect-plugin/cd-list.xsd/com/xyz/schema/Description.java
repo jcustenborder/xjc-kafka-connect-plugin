@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -42,7 +43,9 @@ import org.apache.kafka.connect.data.Struct;
     "content"
 })
 @XmlRootElement(name = "description")
-public class Description {
+public class Description
+    implements Connectable
+{
 
     @XmlElementRefs({
         @XmlElementRef(name = "p", namespace = "http://edutechwiki.unige.ch/en/XML/", type = JAXBElement.class, required = false),
@@ -94,6 +97,7 @@ public class Description {
         return this.content;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getContent()) {

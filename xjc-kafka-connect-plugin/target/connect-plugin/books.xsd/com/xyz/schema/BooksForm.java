@@ -6,6 +6,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -34,7 +35,9 @@ import org.apache.kafka.connect.data.Struct;
 @XmlType(name = "BooksForm", propOrder = {
     "book"
 })
-public class BooksForm {
+public class BooksForm
+    implements Connectable
+{
 
     protected List<BookForm> book;
     public final static Schema CONNECT_SCHEMA;
@@ -79,6 +82,7 @@ public class BooksForm {
         return this.book;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getBook()) {

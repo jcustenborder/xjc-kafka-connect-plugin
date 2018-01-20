@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -40,7 +41,8 @@ import org.apache.kafka.connect.data.Struct;
     "content"
 })
 @XmlRootElement(name = "bullet")
-public class Bullet {
+public class Bullet implements Connectable
+{
 
     @XmlElementRef(name = "strong", namespace = "http://myrecipes.org/", type = JAXBElement.class, required = false)
     @XmlMixed
@@ -76,8 +78,8 @@ public class Bullet {
      * 
      * <p>
      * Objects of the following type(s) are allowed in the list
-     * {@link JAXBElement }{@code <}{@link String }{@code >}
      * {@link String }
+     * {@link JAXBElement }{@code <}{@link String }{@code >}
      * 
      * 
      */
@@ -88,6 +90,7 @@ public class Bullet {
         return this.content;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getContent()) {

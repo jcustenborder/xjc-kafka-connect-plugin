@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -73,7 +74,9 @@ import org.apache.kafka.connect.data.Struct;
     "item"
 })
 @XmlRootElement(name = "shiporder")
-public class Shiporder {
+public class Shiporder
+    implements Connectable
+{
 
     @XmlElement(required = true)
     protected String orderperson;
@@ -202,6 +205,7 @@ public class Shiporder {
         this.orderid = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("orderperson", this.getOrderperson());
@@ -251,7 +255,9 @@ public class Shiporder {
         "quantity",
         "price"
     })
-    public static class Item {
+    public static class Item
+        implements Connectable
+    {
 
         @XmlElement(required = true)
         protected String title;
@@ -376,6 +382,7 @@ public class Shiporder {
             this.price = value;
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             struct.put("title", this.getTitle());
@@ -417,7 +424,9 @@ public class Shiporder {
         "city",
         "country"
     })
-    public static class Shipto {
+    public static class Shipto
+        implements Connectable
+    {
 
         @XmlElement(required = true)
         protected String name;
@@ -541,6 +550,7 @@ public class Shiporder {
             this.country = value;
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             struct.put("name", this.getName());

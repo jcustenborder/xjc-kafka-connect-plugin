@@ -1,6 +1,7 @@
 
 package com.xyz.schema;
 
+import java.util.TimeZone;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -9,6 +10,7 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 import javax.xml.datatype.XMLGregorianCalendar;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -42,7 +44,9 @@ import org.apache.kafka.connect.data.Timestamp;
 @XmlSeeAlso({
     com.xyz.schema.InventoryType.RequestID.class
 })
-public class RequestIDCommonData {
+public class RequestIDCommonData
+    implements Connectable
+{
 
     @XmlValue
     protected String value;
@@ -142,10 +146,16 @@ public class RequestIDCommonData {
         this.timestamp = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         struct.put("value", this.getValue());
         struct.put("Name", this.getName());
+        if (null!= this.getTimestamp()) {
+            struct.put("Timestamp", this.getTimestamp().toGregorianCalendar(TimeZone.getTimeZone("UTC"), null, null).getTime());
+        } else {
+            struct.put("Timestamp", null);
+        }
         return struct;
     }
 

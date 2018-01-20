@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import com.github.jcustenborder.kafka.connect.xml.Connectable;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -44,7 +45,9 @@ import org.apache.kafka.connect.data.Struct;
     "workstationID",
     "reservationID"
 })
-public class ReservationType {
+public class ReservationType
+    implements Connectable
+{
 
     @XmlElement(name = "BusinessUnit")
     protected ReservationType.BusinessUnit businessUnit;
@@ -142,6 +145,7 @@ public class ReservationType {
         this.reservationID = value;
     }
 
+    @Override
     public Struct toConnectStruct() {
         Struct struct = new Struct(CONNECT_SCHEMA);
         if (null!= this.getBusinessUnit()) {
@@ -175,6 +179,7 @@ public class ReservationType {
     @XmlType(name = "")
     public static class BusinessUnit
         extends BusinessUnitCommonData
+        implements Connectable
     {
 
         public final static Schema CONNECT_SCHEMA;
@@ -187,6 +192,7 @@ public class ReservationType {
             CONNECT_SCHEMA = builder.build();
         }
 
+        @Override
         public Struct toConnectStruct() {
             Struct struct = new Struct(CONNECT_SCHEMA);
             return struct;
