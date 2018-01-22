@@ -15,12 +15,14 @@
  */
 package com.github.jcustenborder.kafka.connect.xml;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.PatternFilenameFilter;
 import com.sun.codemodel.JCodeModel;
 import com.sun.tools.xjc.Options;
 import com.sun.tools.xjc.api.S2JJAXBModel;
 import com.sun.tools.xjc.api.SchemaCompiler;
 import com.sun.tools.xjc.api.XJC;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.slf4j.Logger;
@@ -30,20 +32,26 @@ import org.xml.sax.InputSource;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
+
 public class KafkaConnectPluginTest {
   private static final Logger log = LoggerFactory.getLogger(KafkaConnectPluginTest.class);
 
+  @Disabled
   @TestFactory
   public Stream<DynamicTest> build() throws IOException {
 
 
     final File inputDirectory = new File("src/test/resources/com/github/jcustenborder/kafka/connect/xml");
     final File outputDirectoryRoot = new File("target/connect-plugin");
+    final Set<String> skip = ImmutableSet.of(
+        "KitchenV1.0.0.xsd"
 
+    );
     return Arrays.stream(inputDirectory.listFiles(new PatternFilenameFilter("^.+\\.xsd$")))
         .filter(f-> !f.getName().equals("KitchenV1.0.0.xsd"))
         .map(schemaFile -> dynamicTest(schemaFile.getName(), () -> {

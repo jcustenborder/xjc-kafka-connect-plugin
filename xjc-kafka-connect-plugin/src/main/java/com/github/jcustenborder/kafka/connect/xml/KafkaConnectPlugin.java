@@ -42,8 +42,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlMixed;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -83,13 +85,16 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     final JVar fieldBuilderVar = constructorBlock.decl(connectSchemaBuilderJClass, "fieldBuilder");
 
     for (Field field : fields) {
-      constructorBlock.assign(fieldBuilderVar, field.schemaBuilder);
+      if (field.type != Type.STRUCT) {
+        constructorBlock.assign(fieldBuilderVar, field.schemaBuilder);
+        if (!field.required) {
+          constructorBlock.invoke(fieldBuilderVar, "optional");
+        }
 
-      if (!field.required) {
-        constructorBlock.invoke(fieldBuilderVar, "optional");
+        constructorBlock.invoke(builderVar, "field").arg(field.name).arg(fieldBuilderVar.invoke("build"));
+      } else {
+        constructorBlock.invoke(builderVar, "field").arg(field.name).arg(field.schemaBuilder);
       }
-
-      constructorBlock.invoke(builderVar, "field").arg(field.name).arg(fieldBuilderVar.invoke("build"));
     }
 
 
@@ -332,6 +337,14 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
       final Map<String, Object> xmlElementValues = AnnotationUtils.xmlElement(codeModel, jFieldVar);
       final Map<String, Object> xmlAttributeValues = AnnotationUtils.xmlAttribute(codeModel, jFieldVar);
       final Map<String, Object> xmlSchemaTypeValues = AnnotationUtils.xmlSchemaType(codeModel, jFieldVar);
+      final Map<String, Object> xmlMixed = AnnotationUtils.annotationAttributes(codeModel, jFieldVar, XmlMixed.class);
+
+      if (null != xmlMixed) {
+        throw new UnsupportedOperationException(
+            String.format("%s.%s is marked with XmlMixed.", classOutline.implClass.fullName(), jFieldVar.name())
+        );
+      }
+
 
       if (null != xmlElementValues && !xmlElementValues.isEmpty()) {
         field.required = (boolean) xmlElementValues.getOrDefault("required", false);
@@ -445,21 +458,25 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
 
   @Override
   public boolean run(Outline model, Options options, ErrorHandler errorHandler) throws SAXException {
-    JCodeModel codeModel = model.getCodeModel();
-    setupImportedClasses(codeModel);
-    for (ClassOutline classOutline : model.getClasses()) {
-      classOutline.implClass._implements(this.connectableJClass);
-      log.trace("run - {}", classOutline.implClass.name());
+    try {
+      JCodeModel codeModel = model.getCodeModel();
+      setupImportedClasses(codeModel);
+      for (ClassOutline classOutline : model.getClasses()) {
+        classOutline.implClass._implements(this.connectableJClass);
+        log.trace("run - {}", classOutline.implClass.name());
 
-      List<Field> fields = fields(codeModel, classOutline);
-      log.trace("Found {} field(s). {}", fields.size(), fields);
+        List<Field> fields = fields(codeModel, classOutline);
+        log.trace("Found {} field(s). {}", fields.size(), fields);
 
-      JFieldVar schemaField = processSchema(codeModel, classOutline, fields);
-      processToStruct(schemaField, codeModel, classOutline, fields);
+        JFieldVar schemaField = processSchema(codeModel, classOutline, fields);
+        processToStruct(schemaField, codeModel, classOutline, fields);
 //      processFromStruct(codeModel, classOutline);
+      }
+      return true;
+    } catch (Exception e) {
+      errorHandler.error(new SAXParseException("Exception thrown while processing: " + e.getMessage(), null));
+      return false;
     }
-
-    return true;
   }
 
 
