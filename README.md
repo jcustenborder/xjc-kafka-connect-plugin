@@ -6,6 +6,7 @@ interface. The following method is added to each of the classes that are generat
 is populated with the graph of the object.  
 
 
+
 ```java
     @Override
     public Struct toConnectStruct() {
