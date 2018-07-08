@@ -383,6 +383,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
             break;
           case "anySimpleType":
           case "anyURI":
+          case "ID":
             field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("string");
             field.type = Type.VALUE;
             break;
