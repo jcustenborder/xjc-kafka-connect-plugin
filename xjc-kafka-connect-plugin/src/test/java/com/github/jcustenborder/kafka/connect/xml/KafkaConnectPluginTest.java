@@ -57,7 +57,6 @@ public class KafkaConnectPluginTest {
         .filter(f-> !skip.contains(f.getName()))
         .map(schemaFile -> dynamicTest(schemaFile.getName(), () -> {
           File outputDirectory = new File(outputDirectoryRoot, schemaFile.getName());
-          System.out.println(schemaFile.getName());
           outputDirectory.mkdirs();
 
           // Setup schema compiler
