@@ -310,11 +310,13 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
 
   static final Class<?> CLASS_JNARROWED;
   static final Class<?> CLASS_JREFERENCEDCLASS;
+  static final Class<?> CLASS_JARRAYCLASS;
 
   static {
     try {
       CLASS_JNARROWED = Class.forName("com.sun.codemodel.JNarrowedClass");
       CLASS_JREFERENCEDCLASS = Class.forName("com.sun.codemodel.JCodeModel$JReferencedClass");
+      CLASS_JARRAYCLASS = Class.forName("com.sun.codemodel.JArrayClass");
     } catch (ClassNotFoundException e) {
       throw new IllegalStateException(e);
     }
@@ -389,59 +391,79 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
                 String.format("Unknown type %s", name)
             );
         }
-      } else {
+      } else if (typeLookup.containsKey(jFieldVar.type())) {
+        field.schemaBuilder = typeLookup.get(jFieldVar.type());
+        field.type = Type.VALUE;
+      } else if (jFieldVar.type() instanceof JDefinedClass) {
+        JDefinedClass jDefinedClass = (JDefinedClass) jFieldVar.type();
 
-        if (typeLookup.containsKey(jFieldVar.type())) {
-          field.schemaBuilder = typeLookup.get(jFieldVar.type());
-          field.type = Type.VALUE;
-        } else if (jFieldVar.type() instanceof JDefinedClass) {
-          JDefinedClass jDefinedClass = (JDefinedClass) jFieldVar.type();
+        if (null != AnnotationUtils.annotationAttributes(codeModel, jFieldVar, XmlEnum.class)) {
+          field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("string");
+          field.type = Type.XML_ENUM;
+        } else {
+          field.schemaBuilder = jDefinedClass.staticRef(CONNECT_SCHEMA_FIELD);
+          field.type = Type.STRUCT;
+        }
+      } else if (CLASS_JNARROWED.equals(jFieldVar.type().getClass())) {
+        final JClass jClass = (JClass) jFieldVar.type();
+        final JClass basis;
+        final List<JClass> args;
+        try {
+          java.lang.reflect.Field basisField = CLASS_JNARROWED.getDeclaredField("basis");
+          basisField.setAccessible(true);
+          java.lang.reflect.Field argsField = CLASS_JNARROWED.getDeclaredField("args");
+          argsField.setAccessible(true);
+          basis = (JClass) basisField.get(jClass);
+          args = (List<JClass>) argsField.get(jClass);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+          throw new IllegalStateException(e);
+        }
 
-          if (null != AnnotationUtils.annotationAttributes(codeModel, jFieldVar, XmlEnum.class)) {
-            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("string");
-            field.type = Type.XML_ENUM;
+        if (typeList.equals(basis)) {
+          JClass listType = args.get(0);
+
+          if (listType.name().equals("String")) {
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("array")
+                .arg(connectSchemaJClass.staticRef("STRING_SCHEMA"));
+            field.type = Type.VALUE;
           } else {
-            field.schemaBuilder = jDefinedClass.staticRef(CONNECT_SCHEMA_FIELD);
-            field.type = Type.STRUCT;
-          }
-
-        } else if (CLASS_JNARROWED.equals(jFieldVar.type().getClass())) {
-          final JClass jClass = (JClass) jFieldVar.type();
-          final JClass basis;
-          final List<JClass> args;
-          try {
-            Class<?> jnarrowedCls = Class.forName("com.sun.codemodel.JNarrowedClass");
-            java.lang.reflect.Field basisField = jnarrowedCls.getDeclaredField("basis");
-            basisField.setAccessible(true);
-            java.lang.reflect.Field argsField = jnarrowedCls.getDeclaredField("args");
-            argsField.setAccessible(true);
-            basis = (JClass) basisField.get(jClass);
-            args = (List<JClass>) argsField.get(jClass);
-          } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-            throw new IllegalStateException(e);
-          }
-
-          if (typeList.equals(basis)) {
-            JClass listType = args.get(0);
             field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("array")
                 .arg(listType.staticRef(CONNECT_SCHEMA_FIELD));
             field.type = Type.ARRAY;
             field.arrayType = listType;
-          } else {
-            throw new IllegalStateException(
-                String.format("%s is not supported.", basis.fullName())
-            );
           }
-        } else if (CLASS_JREFERENCEDCLASS.equals(jFieldVar.type().getClass())) {
-          log.warn("Nothing for {}", jFieldVar.type().fullName());
         } else {
-          throw new UnsupportedOperationException(
-              String.format(
-                  "%s is not supported.",
-                  jFieldVar.type().getClass().getName()
-              )
+          throw new IllegalStateException(
+              String.format("%s is not supported.", basis.fullName())
           );
         }
+      } else if (CLASS_JARRAYCLASS.equals(jFieldVar.type().getClass())) {
+        final JClass jClass = (JClass) jFieldVar.type();
+        try {
+          java.lang.reflect.Field componentTypeField = CLASS_JARRAYCLASS.getDeclaredField("componentType");
+          componentTypeField.setAccessible(true);
+          final JType componentType = (JType) componentTypeField.get(jClass);
+
+          if (componentType.name().equals("byte")) {
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("bytes");
+            field.type = Type.VALUE;
+          } else {
+            throw new IllegalStateException(
+                String.format("%s[] is not supported.", componentType.fullName())
+            );
+          }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+          throw new IllegalStateException(e);
+        }
+      } else if (CLASS_JREFERENCEDCLASS.equals(jFieldVar.type().getClass())) {
+        log.warn("Nothing for {}", jFieldVar.type().fullName());
+      } else {
+        throw new UnsupportedOperationException(
+            String.format(
+                "%s is not supported.",
+                jFieldVar.type().getClass().getName()
+            )
+        );
       }
 
       Preconditions.checkNotNull(field.schemaBuilder,
