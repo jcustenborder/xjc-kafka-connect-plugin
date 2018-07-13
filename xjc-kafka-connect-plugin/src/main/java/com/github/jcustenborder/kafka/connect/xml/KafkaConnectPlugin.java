@@ -18,6 +18,7 @@ package com.github.jcustenborder.kafka.connect.xml;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.sun.codemodel.ClassType;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JCodeModel;
@@ -123,8 +124,8 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
 
   void setupImportedClasses(JCodeModel codeModel) {
     typeList = codeModel.ref(List.class);
-    typeArrayList = codeModel.ref(ArrayList.class);
     connectStructJClass = codeModel.ref("org.apache.kafka.connect.data.Struct");
+    typeArrayList = codeModel.ref(ArrayList.class).narrow(connectStructJClass);
     connectListOfStructJClass = typeList.narrow(connectStructJClass);
     connectDateJClass = codeModel.ref("org.apache.kafka.connect.data.Date");
     connectTimeJClass = codeModel.ref("org.apache.kafka.connect.data.Time");
@@ -266,11 +267,15 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         );
       } else if (Type.XML_ENUM == field.type) {
         final JInvocation invokeValue = invokeGetter.invoke("value");
-        methodBody.add(
-            structVar.invoke("put")
+        final JConditional nullCheck = methodBody._if(JExpr._null().ne(invokeGetter));
+        nullCheck._then()
+            .add(structVar.invoke("put")
                 .arg(field.name)
-                .arg(invokeValue)
-        );
+                .arg(invokeValue));
+        nullCheck._else()
+            .add(structVar.invoke("put")
+                .arg(field.name)
+                .arg(JExpr._null()));
       }
     }
 
@@ -387,6 +392,14 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
           case "string":
             field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("string");
             field.type = Type.VALUE;
+
+            if (jFieldVar.type() instanceof JDefinedClass) {
+              JDefinedClass jDefinedClass = (JDefinedClass) jFieldVar.type();
+
+              if (ClassType.ENUM.equals(jDefinedClass.getClassType())) {
+                field.type = Type.XML_ENUM;
+              }
+            }
             break;
           default:
             throw new IllegalStateException(
