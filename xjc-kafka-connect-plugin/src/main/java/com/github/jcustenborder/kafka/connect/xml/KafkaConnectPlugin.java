@@ -136,8 +136,8 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     timezoneJClass = codeModel.ref(TimeZone.class);
 
     Map<JType, JExpression> typeLookup = new HashMap<>();
-    typeLookup.put(JPrimitiveType.parse(codeModel, boolean.class.getName()), connectSchemaBuilderJClass.staticInvoke("boolean"));
-    typeLookup.put(codeModel.ref(Boolean.class), connectSchemaBuilderJClass.staticInvoke("boolean"));
+    typeLookup.put(JPrimitiveType.parse(codeModel, boolean.class.getName()), connectSchemaBuilderJClass.staticInvoke("bool"));
+    typeLookup.put(codeModel.ref(Boolean.class), connectSchemaBuilderJClass.staticInvoke("bool"));
     typeLookup.put(JPrimitiveType.parse(codeModel, float.class.getName()), connectSchemaBuilderJClass.staticInvoke("float32"));
     typeLookup.put(codeModel.ref(Float.class), connectSchemaBuilderJClass.staticInvoke("float32"));
     typeLookup.put(JPrimitiveType.parse(codeModel, double.class.getName()), connectSchemaBuilderJClass.staticInvoke("float64"));
