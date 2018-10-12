@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -118,12 +118,14 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
   JClass typeList;
   JClass typeArrayList;
   JClass typeBigDecimal;
+  JClass typeBigInteger;
   JClass typeXMLGregorianCalendar;
   Map<JType, JExpression> typeLookup;
 
   void setupImportedClasses(JCodeModel codeModel) {
     typeList = codeModel.ref(List.class);
     typeArrayList = codeModel.ref(ArrayList.class);
+
     connectStructJClass = codeModel.ref("org.apache.kafka.connect.data.Struct");
     connectListOfStructJClass = typeList.narrow(connectStructJClass);
     connectDateJClass = codeModel.ref("org.apache.kafka.connect.data.Date");
@@ -134,6 +136,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     connectSchemaJClass = codeModel.ref("org.apache.kafka.connect.data.Schema");
     connectableJClass = codeModel.ref("com.github.jcustenborder.kafka.connect.xml.Connectable");
     timezoneJClass = codeModel.ref(TimeZone.class);
+    typeBigInteger = codeModel.ref(BigInteger.class);
 
     Map<JType, JExpression> typeLookup = new HashMap<>();
     typeLookup.put(JPrimitiveType.parse(codeModel, boolean.class.getName()), connectSchemaBuilderJClass.staticInvoke("bool"));
@@ -150,7 +153,8 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     typeLookup.put(codeModel.ref(Integer.class), connectSchemaBuilderJClass.staticInvoke("int32"));
     typeLookup.put(JPrimitiveType.parse(codeModel, long.class.getName()), connectSchemaBuilderJClass.staticInvoke("int64"));
     typeLookup.put(codeModel.ref(Long.class), connectSchemaBuilderJClass.staticInvoke("int64"));
-    typeLookup.put(codeModel.ref(BigInteger.class), connectSchemaBuilderJClass.staticInvoke("int64"));
+
+    typeLookup.put(codeModel.ref(byte[].class), connectSchemaBuilderJClass.staticInvoke("bytes"));
     //TODO: This needs to be configurable some how.
     typeLookup.put(codeModel.ref(BigDecimal.class), connectDecimalJClass.staticInvoke("builder").arg(JExpr.lit(12)));
 
@@ -231,39 +235,76 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
                 .arg(field.name)
                 .arg(JExpr._null()));
 
-      } else if (Type.VALUE == field.type) {
-        methodBody.add(
-            structVar.invoke("put")
-                .arg(field.name)
-                .arg(invokeGetter)
-        );
-      } else if (Type.XML_CALENDER == field.type) {
+      } else if (Type.XML_INTEGER == field.type) {
+        final JInvocation invokeStruct = invokeGetter.invoke("longValue");
         final JConditional nullCheck = methodBody._if(JExpr._null().ne(invokeGetter));
+        nullCheck.
+            _then()
+            .add(structVar.invoke("put")
+                .arg(field.name)
+                .arg(invokeStruct));
+        nullCheck._else()
+            .add(structVar.invoke("put")
+                .arg(field.name)
+                .arg(JExpr._null()));
+      } else if (Type.XML_CALENDER == field.type) {
         final JInvocation invokeGetTime = invokeGetter.invoke("toGregorianCalendar")
             .arg(codeModel.ref(TimeZone.class).staticInvoke("getTimeZone").arg("UTC"))
             .arg(JExpr._null())
             .arg(JExpr._null())
             .invoke("getTime");
-
-
+        final JConditional nullCheck = methodBody._if(JExpr._null().ne(invokeGetter));
         nullCheck._then()
             .add(structVar.invoke("put")
                 .arg(field.name)
                 .arg(invokeGetTime)
             );
-
         nullCheck._else()
             .add(structVar.invoke("put")
                 .arg(field.name)
                 .arg(JExpr._null()));
-
-
       } else if (Type.VALUE == field.type) {
         methodBody.add(
             structVar.invoke("put")
                 .arg(field.name)
                 .arg(invokeGetter)
         );
+      } else if (Type.XML_GDAY == field.type) {
+        final JInvocation invokeGetTime = invokeGetter.invoke("getDay");
+        final JConditional nullCheck = methodBody._if(JExpr._null().ne(invokeGetter));
+        nullCheck._then()
+            .add(structVar.invoke("put")
+                .arg(field.name)
+                .arg(invokeGetTime)
+            );
+        nullCheck._else()
+            .add(structVar.invoke("put")
+                .arg(field.name)
+                .arg(JExpr._null()));
+      } else if (Type.XML_GMONTH == field.type) {
+        final JInvocation invokeGetTime = invokeGetter.invoke("getMonth");
+        final JConditional nullCheck = methodBody._if(JExpr._null().ne(invokeGetter));
+        nullCheck._then()
+            .add(structVar.invoke("put")
+                .arg(field.name)
+                .arg(invokeGetTime)
+            );
+        nullCheck._else()
+            .add(structVar.invoke("put")
+                .arg(field.name)
+                .arg(JExpr._null()));
+      } else if (Type.XML_GYEAR == field.type) {
+        final JInvocation invokeGetTime = invokeGetter.invoke("getYear");
+        final JConditional nullCheck = methodBody._if(JExpr._null().ne(invokeGetter));
+        nullCheck._then()
+            .add(structVar.invoke("put")
+                .arg(field.name)
+                .arg(invokeGetTime)
+            );
+        nullCheck._else()
+            .add(structVar.invoke("put")
+                .arg(field.name)
+                .arg(JExpr._null()));
       } else if (Type.XML_ENUM == field.type) {
         final JInvocation invokeValue = invokeGetter.invoke("value");
         methodBody.add(
@@ -286,7 +327,13 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     ARRAY,
     STRUCT,
     XML_ENUM,
-    XML_CALENDER;
+    XML_CALENDER,
+    XML_GDAY,
+    XML_GMONTH,
+    XML_GMONTHDAY,
+    XML_GYEAR,
+    XML_GYEARMONTH,
+    XML_INTEGER;
   }
 
   static class Field {
@@ -374,14 +421,66 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
             field.schemaBuilder = connectTimestampJClass.staticInvoke("builder");
             field.type = Type.XML_CALENDER;
             break;
-          case "positiveInteger":
+          case "unsignedShort":
+          case "int":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("int32");
+            field.type = Type.VALUE;
+            break;
+          case "nonNegativeInteger":
+          case "nonPositiveInteger":
+          case "negativeInteger":
           case "unsignedLong":
+          case "positiveInteger":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("int64");
+            field.type = Type.XML_INTEGER;
+            break;
+
+          case "unsignedInt":
             field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("int64");
             field.type = Type.VALUE;
             break;
+          case "ENTITIES":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("array")
+                .arg(connectSchemaJClass.staticRef("STRING_SCHEMA"));
+            field.type = Type.VALUE;
+            break;
           case "anySimpleType":
+          case "normalizedString":
           case "anyURI":
+          case "ENTITY":
+          case "Name":
+          case "NCName":
+          case "token":
             field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("string");
+            field.type = Type.VALUE;
+            break;
+          case "gDay":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("int32");
+            field.type = Type.XML_GDAY;
+            break;
+          case "gMonth":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("int32");
+            field.type = Type.XML_GMONTH;
+            break;
+          case "gMonthDay":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("int32");
+            field.type = Type.XML_GMONTHDAY;
+            break;
+          case "gYear":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("int32");
+            field.type = Type.XML_GYEAR;
+            break;
+          case "gYearMonth":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("int32");
+            field.type = Type.XML_GYEARMONTH;
+            break;
+          case "base64Binary":
+          case "hexBinary":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("bytes");
+            field.type = Type.VALUE;
+            break;
+          case "unsignedByte":
+            field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("int16");
             field.type = Type.VALUE;
             break;
           default:
@@ -432,12 +531,17 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
                 String.format("%s is not supported.", basis.fullName())
             );
           }
+        } else if (typeBigInteger.equals(jFieldVar.type())) {
+          field.schemaBuilder = connectSchemaBuilderJClass.staticInvoke("int64");
+          field.type = Type.XML_INTEGER;
         } else if (CLASS_JREFERENCEDCLASS.equals(jFieldVar.type().getClass())) {
           log.warn("Nothing for {}", jFieldVar.type().fullName());
         } else {
+//          continue;
           throw new UnsupportedOperationException(
               String.format(
-                  "%s is not supported.",
+                  "Field %s - %s is not supported.",
+                  kvp.getKey(),
                   jFieldVar.type().getClass().getName()
               )
           );
@@ -474,7 +578,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
       }
       return true;
     } catch (Exception e) {
-      errorHandler.error(new SAXParseException("Exception thrown while processing: " + e.getMessage(), null));
+      errorHandler.error(new SAXParseException("Exception thrown while processing: " + e.getMessage(), null, e));
       return false;
     }
   }
