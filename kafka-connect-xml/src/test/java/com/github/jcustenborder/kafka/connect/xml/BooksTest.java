@@ -47,6 +47,7 @@ public class BooksTest {
     assertNotNull(array, "book is null");
     assertEquals(2, array.size());
     Struct struct = array.get(0);
+    assertEquals(true, struct.getBoolean("test_boolean"), "test_boolean does not match.");
     assertEquals("bk001", struct.getString("id"), "id does not match.");
     assertEquals("Writer", struct.getString("author"), "author does not match.");
     assertEquals("The First Book", struct.getString("title"), "title does not match.");

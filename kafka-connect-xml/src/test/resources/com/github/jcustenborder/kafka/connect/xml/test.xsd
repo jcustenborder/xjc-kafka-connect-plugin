@@ -1,0 +1,22 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="urn:test"
+            xmlns:bks="urn:test">
+
+    <xsd:element name="books" type="bks:BookForm"/>
+
+    <xsd:complexType name="BookForm">
+        <xsd:sequence>
+            <xsd:element name="testBoolean" type="xsd:boolean"/>
+            <xsd:element name="testByte" type="xsd:byte"/>
+            <xsd:element name="testDate" type="xsd:date"/>
+            <xsd:element name="testDateTime" type="xsd:dateTime"/>
+            <xsd:element name="testDecimal" type="xsd:decimal"/>
+            <xsd:element name="testDouble" type="xsd:double"/>
+            <xsd:element name="testFloat" type="xsd:float"/>
+            <xsd:element name="testInt" type="xsd:int"/>
+            <xsd:element name="testInteger" type="xsd:integer"/>
+            <xsd:element name="testShort" type="xsd:short"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:string"/>
+    </xsd:complexType>
+</xsd:schema>

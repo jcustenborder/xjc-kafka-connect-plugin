@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <x:books xmlns:x="urn:books">
     <book id="bk001">
+        <test_boolean>true</test_boolean>
         <author>Writer</author>
         <title>The First Book</title>
         <genre>Fiction</genre>
@@ -10,6 +11,7 @@
     </book>
 
     <book id="bk002">
+        <test_boolean>true</test_boolean>
         <author>Poet</author>
         <title>The Poet's First Poem</title>
         <genre>Poem</genre>
