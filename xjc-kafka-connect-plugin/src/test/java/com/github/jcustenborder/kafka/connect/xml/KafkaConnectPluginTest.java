@@ -49,11 +49,12 @@ public class KafkaConnectPluginTest {
     final File inputDirectory = new File("src/test/resources/com/github/jcustenborder/kafka/connect/xml");
     final File outputDirectoryRoot = new File("target/connect-plugin");
     final Set<String> skip = ImmutableSet.of(
-        "KitchenV1.0.0.xsd"
-
+        "cd-list.xsd",
+        "KitchenV1.0.0.xsd",
+        "recipe.xsd"
     );
     return Arrays.stream(inputDirectory.listFiles(new PatternFilenameFilter("^.+\\.xsd$")))
-        .filter(f-> !f.getName().equals("KitchenV1.0.0.xsd"))
+        .filter(f-> !skip.contains(f.getName()))
         .map(schemaFile -> dynamicTest(schemaFile.getName(), () -> {
           File outputDirectory = new File(outputDirectoryRoot, schemaFile.getName());
           outputDirectory.mkdirs();
