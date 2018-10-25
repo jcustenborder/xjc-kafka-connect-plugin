@@ -63,7 +63,7 @@
         <url>https://github.com/jcustenborder/kafka-connect-xml-parent/issues</url>
     </issueManagement>
     <properties>
-        <jaxb.version>2.2.11</jaxb.version>
+        <jaxb.version>2.3.1</jaxb.version>
         <slf4j.version>1.7.21</slf4j.version>
         <junit.version>5.0.0</junit.version>
         <guava.version>18.0</guava.version>
@@ -73,6 +73,11 @@
         <mockito.version>1.10.19</mockito.version>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
+        </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>

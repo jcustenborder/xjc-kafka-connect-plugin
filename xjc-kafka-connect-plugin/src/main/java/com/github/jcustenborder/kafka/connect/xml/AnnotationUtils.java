@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -73,6 +73,51 @@ class AnnotationUtils {
     return result;
   }
 
+  public static boolean required(JCodeModel codeModel, JFieldVar field) {
+    final Map<String, Object> xmlElementValues = xmlElement(codeModel, field);
+
+    if (null != xmlElementValues && !xmlElementValues.isEmpty()) {
+      return (boolean) xmlElementValues.getOrDefault("required", false);
+    }
+
+    final Map<String, Object> xmlAttributeValues = xmlAttribute(codeModel, field);
+
+    if (null != xmlAttributeValues && !xmlAttributeValues.isEmpty()) {
+      return (boolean) xmlAttributeValues.getOrDefault("required", false);
+    }
+
+    return false;
+  }
+
+  public static String name(JCodeModel codeModel, JFieldVar field, String fieldName) {
+    final Map<String, Object> xmlElementValues = xmlElement(codeModel, field);
+
+    if (null != xmlElementValues && !xmlElementValues.isEmpty()) {
+      return (String) xmlElementValues.getOrDefault("name", fieldName);
+    }
+
+    final Map<String, Object> xmlAttributeValues = xmlAttribute(codeModel, field);
+
+    if (null != xmlAttributeValues && !xmlAttributeValues.isEmpty()) {
+      return (String) xmlAttributeValues.getOrDefault("name", fieldName);
+    }
+
+    return fieldName;
+  }
+
+  public static String xmlType(JCodeModel codeModel, JFieldVar jFieldVar) {
+    final Map<String, Object> xmlSchemaTypeValues = AnnotationUtils.xmlSchemaType(codeModel, jFieldVar);
+    final String name;
+    if (null != xmlSchemaTypeValues && !xmlSchemaTypeValues.isEmpty()) {
+      name = (String) xmlSchemaTypeValues.get("name");
+    } else {
+      name = null;
+    }
+
+    return name;
+  }
+
+
   public static Map<String, Object> annotationAttributes(JCodeModel codeModel, JFieldVar field, Class<?> cls) {
     Preconditions.checkNotNull(field, "field cannot be null.");
     Preconditions.checkNotNull(cls, "cls cannot be null.");
@@ -86,7 +131,14 @@ class AnnotationUtils {
         found = true;
         for (Method method : cls.getMethods()) {
           log.trace("annotationAttributes() - looking for member '{}'", method.getName());
-          final JAnnotationValue annotationValue = annotationUse.getAnnotationMembers().get(method.getName());
+          final Map<String, JAnnotationValue> annotationMembers;
+          try {
+            annotationMembers = annotationUse.getAnnotationMembers();
+          } catch (NullPointerException ex) {
+            log.trace("Exception thrown while trying to read annotationMembers from {}", annotationUse, ex);
+            continue;
+          }
+          final JAnnotationValue annotationValue = annotationMembers.get(method.getName());
           if (null == annotationValue) {
             log.trace("annotationAttributes() - Setting default for '{}' to '{}'", method.getName(), method.getDefaultValue());
             result.put(method.getName(), method.getDefaultValue());
@@ -150,4 +202,7 @@ class AnnotationUtils {
 
     return result;
   }
+
+
+
 }

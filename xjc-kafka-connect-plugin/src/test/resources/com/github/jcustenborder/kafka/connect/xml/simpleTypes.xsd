@@ -6,7 +6,7 @@
 
 <xsd:complexType name="simpleTypes">
     <xsd:sequence>
-        <xsd:element name="test_anySimpleType" type="xsd:anySimpleType"/>
+        <!--<xsd:element name="test_anySimpleType" type="xsd:anySimpleType"/>-->
         <xsd:element name="test_anyURI" type="xsd:anyURI"/>
         <xsd:element name="test_base64Binary" type="xsd:base64Binary"/>
         <xsd:element name="test_boolean" type="xsd:boolean"/>
@@ -16,7 +16,7 @@
         <xsd:element name="test_decimal" type="xsd:decimal"/>
         <xsd:element name="test_double" type="xsd:double"/>
         <!--<xsd:element name="test_duration" type="xsd:duration"/>-->
-        <xsd:element name="test_ENTITIES" type="xsd:ENTITIES"/>
+        <!--<xsd:element name="test_ENTITIES" type="xsd:ENTITIES"/>-->
         <xsd:element name="test_ENTITY" type="xsd:ENTITY"/>
         <xsd:element name="test_float" type="xsd:float"/>
         <xsd:element name="test_gDay" type="xsd:gDay"/>

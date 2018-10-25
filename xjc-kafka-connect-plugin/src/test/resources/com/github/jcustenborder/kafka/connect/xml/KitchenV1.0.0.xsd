@@ -5310,7 +5310,7 @@
                     <xs:documentation>Table of utility alarm configuration and status attributes
                         within the hosted equipment. Systems that have multiple utility types will
                         have more than one entry in this table. Corresponding utility configuration
-                        information can be cross-reference by the INDEX field value in associated
+                        information can be cross-reference by the INDEX fieldState value in associated
                         object tables</xs:documentation>
                 </xs:annotation>
             </xs:element>
@@ -5320,7 +5320,7 @@
                         equipment that shall be logged under utility management practices. Systems
                         that have multiple utility types will have more than one entry in this
                         table. Corresponding utility configuration information can be
-                        cross-referenced by the NAME field value in associated object
+                        cross-referenced by the NAME fieldState value in associated object
                     tables</xs:documentation>
                 </xs:annotation>
             </xs:element>
@@ -5543,13 +5543,13 @@
             <xs:element name="Value" type="NAFEMValue">
                 <xs:annotation>
                     <xs:documentation>The value of the associated attribute defined by the NAME
-                        field that is recorded due to a triggered log event</xs:documentation>
+                        fieldState that is recorded due to a triggered log event</xs:documentation>
                 </xs:annotation>
             </xs:element>
             <xs:element name="Timestamp" type="NAFEMDateTime">
                 <xs:annotation>
                     <xs:documentation>The date and time that the value of the associated attribute
-                        defined by the NAME field was recorded due to a triggered log
+                        defined by the NAME fieldState was recorded due to a triggered log
                     event</xs:documentation>
                 </xs:annotation>
             </xs:element>

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,13 +35,13 @@ import org.xml.sax.SAXParseException;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
@@ -65,19 +65,70 @@ public class KafkaConnectPluginTest implements ErrorListener {
     test(new File(inputDirectory, "simpleTypes.xsd"));
   }
 
+  @Test
+  public void books() throws IOException {
+    test(new File(inputDirectory, "books.xsd"));
+  }
+
+  @Test
+  public void cdlist() throws IOException {
+    test(new File(inputDirectory, "cd-list.xsd"));
+  }
+
+  @Test
+  public void inventory() throws IOException {
+    test(new File(inputDirectory, "InventoryV2.0.0.xsd"));
+  }
+
+  @Test
+  public void kitchen() throws IOException {
+    test(new File(inputDirectory, "KitchenV1.0.0.xsd"));
+  }
+
+  @Test
+  public void recipe() throws IOException {
+    test(new File(inputDirectory, "recipe.xsd"));
+  }
+
+  @Test
+  public void shiporder() throws IOException {
+    test(new File(inputDirectory, "shiporder.xsd"));
+  }
+
+  @Disabled
+  @Test
+  public void niem() throws IOException {
+//    https://release.niem.gov/niem/niem-core/4.0/niem-core.xsd
+    InputSource inputSource = new InputSource("https://release.niem.gov/niem/niem-core/4.0/niem-core.xsd");
+
+    File outputDirectory = new File(outputDirectoryRoot, "niem-core.xsd");
+    test(inputSource, outputDirectory);
+  }
+
+
   void test(File schemaFile) throws IOException {
+    InputSource is = new InputSource(schemaFile.toURI().toString());
     File outputDirectory = new File(outputDirectoryRoot, schemaFile.getName());
     outputDirectory.mkdirs();
+    test(is, outputDirectory);
+  }
 
+
+  void test(InputSource is, File outputDirectory) throws IOException {
     // Setup schema compiler
+    System.setProperty("javax.xml.accessExternalSchema", "all");
     SchemaCompiler sc = XJC.createSchemaCompiler();
     Options options = sc.getOptions();
+//    options
+    InputStream stream = this.getClass().getResourceAsStream("binding.xml");
+    InputSource source = new InputSource(stream);
+
+    source.setSystemId("binding");
+    options.addBindFile(source);
+
 
     options.activePlugins.add(new KafkaConnectPlugin());
-
-
     sc.forcePackageName("com.xyz.schema");
-    InputSource is = new InputSource(schemaFile.toURI().toString());
 
     sc.parseSchema(is);
     sc.setErrorListener(this);
