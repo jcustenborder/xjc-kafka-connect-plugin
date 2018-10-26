@@ -40,8 +40,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import javax.xml.bind.annotation.XmlEnum;
-import javax.xml.bind.annotation.XmlMixed;
-import javax.xml.datatype.XMLGregorianCalendar;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -52,7 +50,26 @@ import java.util.Map;
 import static com.sun.codemodel.JType.parse;
 
 public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
+  static final String TO_CONNECT_STRUCT = "toStruct";
+  static final String FROM_CONNECT_STRUCT = "fromStruct";
+  static final Class<?> CLASS_JNARROWED;
+  static final Class<?> CLASS_JREFERENCEDCLASS;
   private static final Logger log = LoggerFactory.getLogger(KafkaConnectPlugin.class);
+  private static final String CONNECT_SCHEMA_FIELD = "CONNECT_SCHEMA";
+
+  static {
+    try {
+      CLASS_JNARROWED = Class.forName("com.sun.codemodel.JNarrowedClass");
+      CLASS_JREFERENCEDCLASS = Class.forName("com.sun.codemodel.JCodeModel$JReferencedClass");
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  Types types;
+  Map<JType, StaticTypeState> jTypeLookup;
+  Map<String, XmlTypeState> xmlTypeLookup;
+  Map<JType, DefinedTypeState> definedTypeStateLookup = new HashMap<>();
 
   @Override
   public String getOptionName() {
@@ -64,18 +81,16 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     return "TBD";
   }
 
-  private static final String CONNECT_SCHEMA_FIELD = "CONNECT_SCHEMA";
-
   JFieldVar processSchema(JCodeModel codeModel, ClassOutline classOutline, List<FieldState> fieldStates) {
-    final JFieldVar schemaVariable = classOutline.implClass.field(JMod.PUBLIC | JMod.STATIC | JMod.FINAL, connectSchemaJClass, CONNECT_SCHEMA_FIELD);
+    final JFieldVar schemaVariable = classOutline.implClass.field(JMod.PUBLIC | JMod.STATIC | JMod.FINAL, this.types.schema(), CONNECT_SCHEMA_FIELD);
 
     final JBlock constructorBlock = classOutline.implClass.init();
-    final JVar builderVar = constructorBlock.decl(connectSchemaBuilderJClass, "builder", connectSchemaBuilderJClass.staticInvoke("struct"));
+    final JVar builderVar = constructorBlock.decl(this.types.schemaBuilder(), "builder", this.types.schemaBuilder().staticInvoke("struct"));
     final String schemaName = String.format("%s.%s", classOutline._package()._package().name(), classOutline.implClass.name());
     constructorBlock.invoke(builderVar, "name").arg(schemaName);
     constructorBlock.invoke(builderVar, "optional");
 
-    final JVar fieldBuilderVar = constructorBlock.decl(connectSchemaBuilderJClass, "fieldBuilder");
+    final JVar fieldBuilderVar = constructorBlock.decl(this.types.schemaBuilder(), "fieldBuilder");
 
     for (FieldState fieldState : fieldStates) {
       if (fieldState.schemaBuilder() instanceof JInvocation) {
@@ -99,30 +114,6 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     constructorBlock.assign(schemaVariable, builderVar.invoke("build"));
     return schemaVariable;
   }
-
-
-  JClass connectStructJClass;
-  JClass connectTimestampJClass;
-  JClass connectTimeJClass;
-  JClass connectDateJClass;
-  JClass connectDecimalJClass;
-  JClass connectSchemaBuilderJClass;
-  JClass connectSchemaJClass;
-  JClass connectListOfStructJClass;
-  JClass connectableJClass;
-
-  JClass typeList;
-  JClass typeMap;
-
-  JClass typeArrayList;
-  JClass typeBigDecimal;
-  JClass typeBigInteger;
-  JClass typeXMLGregorianCalendar;
-  JClass typeConnectableHelper;
-
-
-  Map<JType, StaticTypeState> jTypeLookup;
-  Map<String, XmlTypeState> xmlTypeLookup;
 
   void add(Map<JType, StaticTypeState> result, JExpression schemaBuilder, JExpression schema, String readMethod, String writeMethod, JCodeModel codeModel, Class<?>... classes) {
     ImmutableStaticTypeState.Builder builder = ImmutableStaticTypeState.builder();
@@ -149,17 +140,17 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
   Map<JType, StaticTypeState> buildTypeLookup(JCodeModel codeModel) {
     Map<JType, StaticTypeState> result = new HashMap<>();
 
-    add(result, connectSchemaBuilderJClass.staticInvoke("bool"), connectSchemaJClass.staticRef("BOOLEAN_SCHEMA"), "toBoolean", "fromBoolean", codeModel, boolean.class, Boolean.class);
-    add(result, connectSchemaBuilderJClass.staticInvoke("float32"), connectSchemaJClass.staticRef("FLOAT32_SCHEMA"), "toFloat32", "fromFloat32", codeModel, float.class, Float.class);
-    add(result, connectSchemaBuilderJClass.staticInvoke("float64"), connectSchemaJClass.staticRef("FLOAT64_SCHEMA"), "toFloat64", "fromFloat64", codeModel, double.class, Double.class);
-    add(result, connectSchemaBuilderJClass.staticInvoke("int8"), connectSchemaJClass.staticRef("INT8_SCHEMA"), "toInt8", "fromInt8", codeModel, byte.class, Byte.class);
-    add(result, connectSchemaBuilderJClass.staticInvoke("int16"), connectSchemaJClass.staticRef("INT16_SCHEMA"), "toInt16", "fromInt16", codeModel, short.class, Short.class);
-    add(result, connectSchemaBuilderJClass.staticInvoke("int32"), connectSchemaJClass.staticRef("IN32_SCHEMA"), "toInt32", "fromInt32", codeModel, int.class, Integer.class);
-    add(result, connectSchemaBuilderJClass.staticInvoke("int64"), connectSchemaJClass.staticRef("IN64_SCHEMA"), "toInt64", "fromInt64", codeModel, long.class, Long.class);
-    add(result, connectSchemaBuilderJClass.staticInvoke("int64"), connectSchemaJClass.staticRef("IN64_SCHEMA"), "toInt64", "fromInt64", codeModel, BigInteger.class);
-    add(result, connectSchemaBuilderJClass.staticInvoke("bytes"), connectSchemaJClass.staticRef("BYTES_SCHEMA"), "toBytes", "fromBytes", codeModel, byte[].class);
-    add(result, connectSchemaBuilderJClass.staticInvoke("string"), connectSchemaJClass.staticRef("STRING_SCHEMA"), "toString", "fromString", codeModel, String.class);
-    add(result, connectDecimalJClass.staticInvoke("builder").arg(JExpr.lit(12)), null, "toDecimal", "fromDecimal", codeModel, BigDecimal.class);
+    add(result, this.types.schemaBuilder().staticInvoke("bool"), this.types.schema().staticRef("BOOLEAN_SCHEMA"), "toBoolean", "fromBoolean", codeModel, boolean.class, Boolean.class);
+    add(result, this.types.schemaBuilder().staticInvoke("float32"), this.types.schema().staticRef("FLOAT32_SCHEMA"), "toFloat32", "fromFloat32", codeModel, float.class, Float.class);
+    add(result, this.types.schemaBuilder().staticInvoke("float64"), this.types.schema().staticRef("FLOAT64_SCHEMA"), "toFloat64", "fromFloat64", codeModel, double.class, Double.class);
+    add(result, this.types.schemaBuilder().staticInvoke("int8"), this.types.schema().staticRef("INT8_SCHEMA"), "toInt8", "fromInt8", codeModel, byte.class, Byte.class);
+    add(result, this.types.schemaBuilder().staticInvoke("int16"), this.types.schema().staticRef("INT16_SCHEMA"), "toInt16", "fromInt16", codeModel, short.class, Short.class);
+    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("IN32_SCHEMA"), "toInt32", "fromInt32", codeModel, int.class, Integer.class);
+    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("IN64_SCHEMA"), "toInt64", "fromInt64", codeModel, long.class, Long.class);
+    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("IN64_SCHEMA"), "toInt64", "fromInt64", codeModel, BigInteger.class);
+    add(result, this.types.schemaBuilder().staticInvoke("bytes"), this.types.schema().staticRef("BYTES_SCHEMA"), "toBytes", "fromBytes", codeModel, byte[].class);
+    add(result, this.types.schemaBuilder().staticInvoke("string"), this.types.schema().staticRef("STRING_SCHEMA"), "toString", "fromString", codeModel, String.class);
+    add(result, this.types.bigDecimal().staticInvoke("builder").arg(JExpr.lit(12)), null, "toDecimal", "fromDecimal", codeModel, BigDecimal.class);
     return ImmutableMap.copyOf(result);
   }
 
@@ -178,62 +169,46 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
 
   Map<String, XmlTypeState> buildXmlTypeLookup() {
     Map<String, XmlTypeState> result = new HashMap<>();
-    add(result, connectDateJClass.staticInvoke("builder"), connectDateJClass.staticRef("SCHEMA"), "toDate", "fromDate", "date");
-    add(result, connectTimeJClass.staticInvoke("builder"), connectTimeJClass.staticRef("SCHEMA"), "toTime", "fromTime", "time");
-    add(result, connectTimestampJClass.staticInvoke("builder"), connectTimestampJClass.staticRef("BOOLEAN_SCHEMA"), "toDateTime", "fromDateTime", "dateTime");
-    add(result, connectSchemaBuilderJClass.staticInvoke("int32"), connectSchemaJClass.staticRef("INT32_SCHEMA"), "toInt32", "fromInt32", "unsignedShort", "int");
-    add(result, connectSchemaBuilderJClass.staticInvoke("int64"), connectSchemaJClass.staticRef("INT64_SCHEMA"), "toInt64", "fromInt64",
+    add(result, this.types.date().staticInvoke("builder"), this.types.date().staticRef("SCHEMA"), "toDate", "fromDate", "date");
+    add(result, this.types.time().staticInvoke("builder"), this.types.time().staticRef("SCHEMA"), "toTime", "fromTime", "time");
+    add(result, this.types.timestamp().staticInvoke("builder"), this.types.timestamp().staticRef("BOOLEAN_SCHEMA"), "toDateTime", "fromDateTime", "dateTime");
+    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toInt32", "fromInt32", "unsignedShort", "int");
+    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("INT64_SCHEMA"), "toInt64", "fromInt64",
         "negativeInteger", "nonNegativeInteger", "nonPositiveInteger", "negativeInteger",
         "unsignedLong", "positiveInteger", "unsignedInt"
     );
-    add(result, connectSchemaBuilderJClass.staticInvoke("string"), connectSchemaJClass.staticRef("STRING_SCHEMA"), "toString", "fromString",
+    add(result, this.types.schemaBuilder().staticInvoke("string"), this.types.schema().staticRef("STRING_SCHEMA"), "toString", "fromString",
         "anySimpleType", "normalizedString", "anyURI", "ENTITY", "Name", "NCName", "token",
         "ID", "IDREF"
     );
-    add(result, connectSchemaBuilderJClass.staticInvoke("int32"), connectSchemaJClass.staticRef("INT32_SCHEMA") , "toXmlgDay","fromXmlgDay", "gDay");
-    add(result, connectSchemaBuilderJClass.staticInvoke("int32"), connectSchemaJClass.staticRef("INT32_SCHEMA"), "toXmlgMonth", "fromXmlgDay", "gMonth");
-    add(result, connectSchemaBuilderJClass.staticInvoke("int32"), connectSchemaJClass.staticRef("INT32_SCHEMA"), "toXmlgMonthDay", "fromXmlgDay", "gMonthDay");
-    add(result, connectSchemaBuilderJClass.staticInvoke("int32"), connectSchemaJClass.staticRef("INT32_SCHEMA"), "toXmlgYearMonth", "fromXmlgYearMonth", "gYearMonth");
-    add(result, connectSchemaBuilderJClass.staticInvoke("int32"), connectSchemaJClass.staticRef("INT32_SCHEMA"), "toXmlgYear", "fromXmlgYear", "gYear");
-    add(result, connectSchemaBuilderJClass.staticInvoke("bytes"), connectSchemaJClass.staticRef("BYTES_SCHEMA"), "toBytes", "fromBytes", "base64Binary", "hexBinary");
-    add(result, connectSchemaBuilderJClass.staticInvoke("int16"), connectSchemaJClass.staticRef("INT16_SCHEMA"), "toInt16", "fromInt16", "unsignedByte");
-    add(result, connectSchemaBuilderJClass.staticInvoke("array").arg(connectSchemaJClass.staticRef("STRING")), null, "toArray", "fromArray", "IDREFS");
+    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgDay", "fromXmlgDay", "gDay");
+    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgMonth", "fromXmlgDay", "gMonth");
+    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgMonthDay", "fromXmlgDay", "gMonthDay");
+    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgYearMonth", "fromXmlgYearMonth", "gYearMonth");
+    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgYear", "fromXmlgYear", "gYear");
+    add(result, this.types.schemaBuilder().staticInvoke("bytes"), this.types.schema().staticRef("BYTES_SCHEMA"), "toBytes", "fromBytes", "base64Binary", "hexBinary");
+    add(result, this.types.schemaBuilder().staticInvoke("int16"), this.types.schema().staticRef("INT16_SCHEMA"), "toInt16", "fromInt16", "unsignedByte");
+    add(result, this.types.schemaBuilder().staticInvoke("array").arg(this.types.schema().staticRef("STRING")), null, "toArray", "fromArray", "IDREFS");
 
     return ImmutableMap.copyOf(result);
   }
 
   void setupImportedClasses(JCodeModel codeModel) {
-    this.typeList = codeModel.ref(List.class);
-    this.typeArrayList = codeModel.ref(ArrayList.class);
-    this.connectStructJClass = codeModel.ref("org.apache.kafka.connect.data.Struct");
-    this.connectListOfStructJClass = typeList.narrow(connectStructJClass);
-    this.connectDateJClass = codeModel.ref("org.apache.kafka.connect.data.Date");
-    this.connectTimeJClass = codeModel.ref("org.apache.kafka.connect.data.Time");
-    this.connectDecimalJClass = codeModel.ref("org.apache.kafka.connect.data.Decimal");
-    this.connectTimestampJClass = codeModel.ref("org.apache.kafka.connect.data.Timestamp");
-    this.connectSchemaBuilderJClass = codeModel.ref("org.apache.kafka.connect.data.SchemaBuilder");
-    this.connectSchemaJClass = codeModel.ref("org.apache.kafka.connect.data.Schema");
-    this.connectableJClass = codeModel.ref("com.github.jcustenborder.kafka.connect.xml.Connectable");
-    this.typeBigInteger = codeModel.ref(BigInteger.class);
-    this.typeConnectableHelper = codeModel.ref("com.github.jcustenborder.kafka.connect.xml.ConnectableHelper");
-    this.typeXMLGregorianCalendar = codeModel.ref(XMLGregorianCalendar.class);
+    this.types = Types.build(codeModel);
     this.jTypeLookup = buildTypeLookup(codeModel);
     this.xmlTypeLookup = buildXmlTypeLookup();
   }
 
-  static final String TO_CONNECT_STRUCT = "toStruct";
-  static final String FROM_CONNECT_STRUCT = "fromStruct";
-
   void processToStruct(JFieldVar schemaField, JCodeModel codeModel, ClassOutline classOutline, List<FieldState> fieldStates) {
 
-    final JMethod method = classOutline.implClass.method(JMod.PUBLIC, connectStructJClass, TO_CONNECT_STRUCT);
+    final JMethod method = classOutline.implClass.method(JMod.PUBLIC, this.types.struct(), TO_CONNECT_STRUCT);
     method.annotate(Override.class);
     final JBlock methodBody = method.body();
-    final JVar structVar = methodBody.decl(connectStructJClass, "struct", JExpr._new(connectStructJClass).arg(schemaField));
+    final JVar structVar = methodBody.decl(this.types.struct(), "struct", JExpr._new(this.types.struct()).arg(schemaField));
 
     for (FieldState fieldState : fieldStates) {
 
-      JInvocation callAddMethod = typeConnectableHelper.staticInvoke(fieldState.readMethod())
+      JInvocation callAddMethod = this.types.connectableHelper().staticInvoke(fieldState.readMethod())
           .arg(structVar)
           .arg(JExpr.lit(fieldState.name()))
           .arg(JExpr._this().ref(fieldState.fieldVar()));
@@ -250,12 +225,12 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
 
   void processFromStruct(JCodeModel codeModel, ClassOutline classOutline, List<FieldState> fieldStates) {
     final JMethod method = classOutline.implClass.method(JMod.PUBLIC, void.class, FROM_CONNECT_STRUCT);
-    final JVar structVar = method.param(connectStructJClass, "struct");
+    final JVar structVar = method.param(this.types.struct(), "struct");
     method.annotate(Override.class);
     final JBlock methodBody = method.body();
 
     for (FieldState fieldState : fieldStates) {
-      JInvocation callAddMethod = typeConnectableHelper.staticInvoke(fieldState.writeMethod())
+      JInvocation callAddMethod = this.types.connectableHelper().staticInvoke(fieldState.writeMethod())
           .arg(structVar)
           .arg(JExpr.lit(fieldState.name()));
 
@@ -270,21 +245,13 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     }
   }
 
-  static final Class<?> CLASS_JNARROWED;
-  static final Class<?> CLASS_JREFERENCEDCLASS;
+  State type(JCodeModel codeModel, ClassOutline classOutline, JFieldVar field, JType type) {
 
-  static {
-    try {
-      CLASS_JNARROWED = Class.forName("com.sun.codemodel.JNarrowedClass");
-      CLASS_JREFERENCEDCLASS = Class.forName("com.sun.codemodel.JCodeModel$JReferencedClass");
-    } catch (ClassNotFoundException e) {
-      throw new IllegalStateException(e);
+    if (this.types.blackListTypes().contains(type)) {
+      throw new TypeTooGenericException(classOutline, field, null, type);
     }
-  }
 
-  Map<JType, DefinedTypeState> definedTypeStateLookup = new HashMap<>();
 
-  State type(JCodeModel codeModel, JFieldVar field, JType type) {
     State jTypeState = this.jTypeLookup.get(type);
 
     if (null != jTypeState) {
@@ -296,7 +263,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         JDefinedClass jDefinedClass = (JDefinedClass) type;
         ImmutableDefinedTypeState.Builder builder = ImmutableDefinedTypeState.builder();
         if (null != AnnotationUtils.annotationAttributes(codeModel, field, XmlEnum.class)) {
-          builder.schemaBuilder(connectSchemaBuilderJClass.staticInvoke("string"));
+          builder.schemaBuilder(this.types.schemaBuilder().staticInvoke("string"));
           builder.readMethod("toString");
           builder.writeMethod("toEnum");
           builder.addWriteMethodArgs(jDefinedClass.dotclass());
@@ -332,24 +299,23 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         ImmutableDefinedTypeState.Builder builder = ImmutableDefinedTypeState.builder()
             .type(type);
 
-        if (typeList.equals(basis)) {
+        if (this.types.list().equals(basis)) {
           JClass valueType = args.get(0);
-          State valueState = type(codeModel, field, valueType);
+          State valueState = type(codeModel, classOutline, field, valueType);
 
-
-          JInvocation schemaBuilder = connectSchemaBuilderJClass.staticInvoke("array")
+          JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("array")
               .arg(valueState.schema());
           builder.schemaBuilder(schemaBuilder);
           builder.readMethod("toArray");
           builder.writeMethod("fromArray");
           builder.addWriteMethodArgs(valueType.dotclass());
           return builder.build();
-        } else if (typeMap.equals(basis)) {
+        } else if (this.types.map().equals(basis)) {
           JClass keyType = args.get(0);
-          State keyState = type(codeModel, field, keyType);
+          State keyState = type(codeModel, classOutline, field, keyType);
           JClass valueType = args.get(1);
-          State valueState = type(codeModel, field, valueType);
-          JInvocation schemaBuilder = connectSchemaBuilderJClass.staticInvoke("map")
+          State valueState = type(codeModel, classOutline, field, valueType);
+          JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("map")
               .arg(keyState.schema())
               .arg(valueState.schema());
           builder.schemaBuilder(schemaBuilder);
@@ -359,22 +325,25 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
           builder.addWriteMethodArgs(valueType.dotclass());
           return builder.build();
         } else {
-          throw new IllegalStateException(
-              String.format("%s is not supported.", basis.fullName())
+          throw new UnsupportedTypeException(
+              classOutline,
+              field,
+              field.type(),
+              basis
           );
         }
       });
     }
 
-    throw new IllegalStateException(
-        String.format(
-            "Could not determine type. type = %s, ",
-            type
-        )
+
+    throw new UnsupportedTypeException(
+        classOutline,
+        field,
+        null,
+        field.type()
     );
-
-
   }
+
 
   FieldState field(JCodeModel codeModel, ClassOutline classOutline, final String fieldName, final JFieldVar jFieldVar) {
     try {
@@ -388,8 +357,6 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
       fieldState.name(name);
       fieldState.fieldVar(jFieldVar);
 
-      checkNotXmlMixed(classOutline, codeModel, jFieldVar);
-
       if (!Strings.isNullOrEmpty(xmlType)) {
         log.trace("field() - xmlType = '{}'", xmlType);
         XmlTypeState xmlTypeState = this.xmlTypeLookup.get(xmlType);
@@ -400,25 +367,25 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         }
         fieldState.from(xmlTypeState);
       } else {
-        State jTypeState = type(codeModel, jFieldVar, jFieldVar.type());
+        State jTypeState = type(codeModel, classOutline, jFieldVar, jFieldVar.type());
 
         if (null != jTypeState) {
           fieldState.from(jTypeState);
         } else if (CLASS_JREFERENCEDCLASS.equals(jFieldVar.type().getClass())) {
           log.warn("Nothing for {}", jFieldVar.type().fullName());
         } else {
-          throw new UnsupportedOperationException(
-              String.format(
-                  "FieldState %s - %s is not supported.",
-                  fieldName,
-                  jFieldVar.type().getClass().getName()
-              )
+          throw new UnsupportedTypeException(
+              classOutline,
+              jFieldVar,
+              null,
+              jFieldVar.type()
           );
         }
       }
       return fieldState.build();
     } catch (Exception ex) {
       throw new IllegalStateException(
+
           String.format(
               "Exception thrown while building field '%s'. %s",
               fieldName,
@@ -453,18 +420,6 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     return result;
   }
 
-  private void checkNotXmlMixed(ClassOutline classOutline, JCodeModel codeModel, JFieldVar
-      jFieldVar) {
-    final Map<String, Object> xmlMixed = AnnotationUtils.annotationAttributes(codeModel, jFieldVar, XmlMixed.class);
-
-    if (null != xmlMixed) {
-      throw new UnsupportedOperationException(
-          String.format("%s.%s is marked with XmlMixed.", classOutline.implClass.fullName(), jFieldVar.name())
-      );
-    }
-  }
-
-
   @Override
   public boolean run(Outline model, Options options, ErrorHandler errorHandler) throws
       SAXException {
@@ -472,7 +427,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
       JCodeModel codeModel = model.getCodeModel();
       setupImportedClasses(codeModel);
       for (ClassOutline classOutline : model.getClasses()) {
-        classOutline.implClass._implements(this.connectableJClass);
+        classOutline.implClass._implements(this.types.connectable());
         log.trace("run - {}", classOutline.implClass.name());
 
         List<FieldState> fieldStates = fields(codeModel, classOutline);
