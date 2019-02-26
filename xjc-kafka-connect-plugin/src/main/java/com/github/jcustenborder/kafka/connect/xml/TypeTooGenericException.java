@@ -29,8 +29,8 @@ class TypeTooGenericException extends UnsupportedTypeException {
 
   @Override
   public String getMessage() {
-    return String.format("The type %s is to generic to be supported by a Connect Schema. Please " +
-        "look at customing the JAXB bindings to map this type to a different java type such as " +
+    return String.format("The type %s is too generic to be supported by a Connect Schema. Please " +
+        "look at customizing the JAXB bindings to map this type to a different java type such as " +
         "a string. https://docs.oracle.com/javase/tutorial/jaxb/intro/custom.html", this.type.fullName());
   }
 }
