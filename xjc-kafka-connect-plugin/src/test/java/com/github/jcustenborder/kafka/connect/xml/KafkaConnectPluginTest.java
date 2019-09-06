@@ -15,113 +15,90 @@
  */
 package com.github.jcustenborder.kafka.connect.xml;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Joiner;
 import com.google.common.io.PatternFilenameFilter;
 import com.sun.codemodel.JCodeModel;
 import com.sun.tools.xjc.Options;
-import com.sun.tools.xjc.api.ErrorListener;
+import com.sun.tools.xjc.Plugin;
 import com.sun.tools.xjc.api.S2JJAXBModel;
 import com.sun.tools.xjc.api.SchemaCompiler;
 import com.sun.tools.xjc.api.XJC;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXParseException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 
-public class KafkaConnectPluginTest implements ErrorListener {
+public class KafkaConnectPluginTest {
   private static final Logger log = LoggerFactory.getLogger(KafkaConnectPluginTest.class);
 
-  final File outputDirectoryRoot = new File("target/connect-plugin");
-  final File inputDirectory = new File("src/test/resources/com/github/jcustenborder/kafka/connect/xml");
+  private final File outputDirectoryRoot = new File("target/connect-plugin");
+  private final File inputDirectory = new File("src/test/resources/com/github/jcustenborder/kafka/connect/xml");
 
-  List<SAXParseException> exceptions;
-
-  @BeforeEach
-  public void beforeEach() {
-    this.exceptions = new ArrayList<>();
-  }
-
-
-  @Test
-  public void simpleTypes() throws IOException {
-    test(new File(inputDirectory, "simpleTypes.xsd"));
-  }
-
-  void test(File schemaFile) throws IOException {
-    File outputDirectory = new File(outputDirectoryRoot, schemaFile.getName());
-    outputDirectory.mkdirs();
-
-    // Setup schema compiler
+  static void compile(InputSource is, File outputDirectory, Plugin... plugins) throws IOException {
+    if (!outputDirectory.isDirectory()) {
+      assertTrue(
+          outputDirectory.mkdirs(),
+          String.format("Directory %s should have been created.", outputDirectory)
+      );
+    }
+    System.setProperty("javax.xml.accessExternalSchema", "all");
     SchemaCompiler sc = XJC.createSchemaCompiler();
     Options options = sc.getOptions();
-
-    options.activePlugins.add(new KafkaConnectPlugin());
-
+    if (plugins.length > 0) {
+      log.info("compile() - adding activePlugins {}",
+          Joiner.on(", ").join(
+              Arrays.stream(plugins)
+                  .map(plugin -> plugin.getClass().getSimpleName())
+                  .collect(Collectors.toList())
+          )
+      );
+      options.activePlugins.addAll(Arrays.asList(plugins));
+    }
 
     sc.forcePackageName("com.xyz.schema");
-    InputSource is = new InputSource(schemaFile.toURI().toString());
-
     sc.parseSchema(is);
-    sc.setErrorListener(this);
+    ConnectErrorListener errorListener = new ConnectErrorListener();
+    sc.setErrorListener(errorListener);
     S2JJAXBModel model = sc.bind();
-    assertTrue(exceptions.isEmpty(), "There should be no exceptions.");
+    assertFalse(errorListener.hasExceptions(), "There should be no exceptions.");
+    assertNotNull(model, "model could not be generated.");
 
+    log.info("compile() - Generating code to {}", outputDirectory);
     JCodeModel jCodeModel = model.generateCode(null, null);
     jCodeModel.build(outputDirectory);
   }
 
-  @Disabled
+  void test(File schemaFile) throws IOException {
+    InputSource is = new InputSource(schemaFile.toURI().toString());
+    File outputDirectory = new File(outputDirectoryRoot, schemaFile.getName());
+    test(is, outputDirectory);
+  }
+
+  void test(InputSource is, File outputDirectory) throws IOException {
+    File beforeDirectory = new File(outputDirectory, "before");
+    compile(is, beforeDirectory);
+    File afterDirectory = new File(outputDirectory, "after");
+    compile(is, afterDirectory, new KafkaConnectPlugin());
+  }
+
   @TestFactory
   public Stream<DynamicTest> build() throws IOException {
-
-
-    final Set<String> skip = ImmutableSet.of(
-        "KitchenV1.0.0.xsd",
-        "simpleTypes.xsd"
-    );
     return Arrays.stream(inputDirectory.listFiles(new PatternFilenameFilter("^.+\\.xsd$")))
         .map(schemaFile -> dynamicTest(schemaFile.getName(), () -> {
           test(schemaFile);
         }));
-  }
-
-  @Override
-  public void error(SAXParseException e) {
-    log.error("error", e);
-    exceptions.add(e);
-  }
-
-  @Override
-  public void fatalError(SAXParseException e) {
-    log.error("fatalError", e);
-    exceptions.add(e);
-  }
-
-  @Override
-  public void warning(SAXParseException e) {
-    log.warn("warning", e);
-  }
-
-  @Override
-  public void info(SAXParseException e) {
-    log.warn("info", e);
   }
 }

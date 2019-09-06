@@ -15,10 +15,11 @@
  */
 package com.github.jcustenborder.kafka.connect.xml;
 
-import books.BooksForm;
-import books.ObjectFactory;
+import simpletypeattributes.ObjectFactory;
+import simpletypeattributes.SimpleTypeAttributes;
 
-public class BooksTest extends AbstractRoundTripTest<BooksForm> {
+
+public class SimpleTypeAttributesTest extends AbstractRoundTripTest<SimpleTypeAttributes> {
 
   @Override
   protected Class<?> objectFactoryClass() {
@@ -26,12 +27,13 @@ public class BooksTest extends AbstractRoundTripTest<BooksForm> {
   }
 
   @Override
-  protected Class<BooksForm> dataClass() {
-    return BooksForm.class;
+  protected Class<SimpleTypeAttributes> dataClass() {
+    return SimpleTypeAttributes.class;
   }
 
   @Override
   protected String dataFileName() {
-    return "books.xml";
+    return "simpleTypeAttributes.xml";
   }
+
 }

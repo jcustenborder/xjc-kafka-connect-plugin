@@ -15,23 +15,15 @@
  */
 package com.github.jcustenborder.kafka.connect.xml;
 
-import books.BooksForm;
-import books.ObjectFactory;
+import org.immutables.value.Value;
 
-public class BooksTest extends AbstractRoundTripTest<BooksForm> {
+import java.util.List;
 
-  @Override
-  protected Class<?> objectFactoryClass() {
-    return ObjectFactory.class;
-  }
-
-  @Override
-  protected Class<BooksForm> dataClass() {
-    return BooksForm.class;
-  }
-
-  @Override
-  protected String dataFileName() {
-    return "books.xml";
-  }
+@Value.Immutable
+interface XmlTypeState extends State {
+  /**
+   * Xml Types
+   * @return
+   */
+  List<String> xmlTypes();
 }

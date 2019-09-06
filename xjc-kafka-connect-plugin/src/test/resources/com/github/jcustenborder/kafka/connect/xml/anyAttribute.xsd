@@ -1,0 +1,15 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.java2s.com"
+            xmlns="http://www.java2s.com"
+            elementFormDefault="qualified">
+    <xsd:element name="person">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="firstname" type="xsd:string"/>
+                <xsd:element name="lastname" type="xsd:string"/>
+            </xsd:sequence>
+            <xsd:anyAttribute/>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>

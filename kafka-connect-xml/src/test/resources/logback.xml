@@ -8,10 +8,9 @@
         </encoder>
     </appender>
 
-    <logger name="com.github.jcustenborder.kafka.connect.xml.AnnotationUtils" level="INFO" />
-    <logger name="com.github.jcustenborder.xjc.kafka.connect" level="INFO" />
+    <logger name="com.github.jcustenborder.kafka.connect.xml" level="TRACE" />
 
-    <root level="TRACE">
+    <root level="INFO">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

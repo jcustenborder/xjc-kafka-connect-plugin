@@ -15,23 +15,35 @@
  */
 package com.github.jcustenborder.kafka.connect.xml;
 
-import books.BooksForm;
-import books.ObjectFactory;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JFieldVar;
+import org.immutables.value.Value;
 
-public class BooksTest extends AbstractRoundTripTest<BooksForm> {
+import java.util.List;
 
-  @Override
-  protected Class<?> objectFactoryClass() {
-    return ObjectFactory.class;
-  }
+@Value.Immutable
+interface FieldState extends State {
+  /**
+   * Name of the field in the xml document.
+   * @return
+   */
+  String name();
 
-  @Override
-  protected Class<BooksForm> dataClass() {
-    return BooksForm.class;
-  }
+  /**
+   * The field in the generated code.
+   * @return
+   */
+  JFieldVar fieldVar();
 
-  @Override
-  protected String dataFileName() {
-    return "books.xml";
-  }
+  /**
+   * Flag to determine if the field is required.
+   * @return
+   */
+  boolean required();
+
+  /**
+   * Additional arguments that are passed to the read method.
+   * @return
+   */
+  List<JExpression> readMethodArgs();
 }
