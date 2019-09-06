@@ -32,7 +32,7 @@
         <xsd:attribute name="test_Name" type="xsd:Name"/>
         <xsd:attribute name="test_NCName" type="xsd:NCName"/>
         <xsd:attribute name="test_negativeInteger" type="xsd:negativeInteger"/>
-        <!--<xsd:attribute name="test_NMTOKEN" type="xsd:NMTOKEN"/>-->
+        <xsd:attribute name="test_NMTOKEN" type="xsd:NMTOKEN"/>
         <!--<xsd:attribute name="test_NMTOKENS" type="xsd:NMTOKENS"/>-->
         <xsd:attribute name="test_nonNegativeInteger" type="xsd:nonNegativeInteger"/>
         <xsd:attribute name="test_nonPositiveInteger" type="xsd:nonPositiveInteger"/>

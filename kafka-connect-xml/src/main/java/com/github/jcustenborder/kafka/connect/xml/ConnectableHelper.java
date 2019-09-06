@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.Duration;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -32,7 +31,6 @@ import javax.xml.namespace.QName;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -41,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class ConnectableHelper {
   public static final Schema QNAME_SCHEMA = qnameBuilder().build();
@@ -53,32 +50,6 @@ public class ConnectableHelper {
         .field("prefix", Schema.OPTIONAL_STRING_SCHEMA)
         .field("namespaceURI", Schema.OPTIONAL_STRING_SCHEMA);
   }
-
-  static final List<DatatypeConstants.Field> DURATION_FIELDS;
-
-  static {
-    DURATION_FIELDS = Arrays.stream(DatatypeConstants.class.getFields())
-        .filter(field -> field.getType().equals(DatatypeConstants.Field.class))
-        .map(field -> {
-          try {
-            return (DatatypeConstants.Field) field.get(null);
-          } catch (IllegalAccessException e) {
-            throw new DataException(e);
-          }
-        })
-        .collect(Collectors.toList());
-
-  }
-
-  public static final SchemaBuilder durationBuilder() {
-    SchemaBuilder result = SchemaBuilder.struct()
-        .name(Duration.class.getName());
-    for (DatatypeConstants.Field field : DURATION_FIELDS) {
-      result.field(field.toString(), Schema.OPTIONAL_INT32_SCHEMA);
-    }
-    return result;
-  }
-
 
   private static final Logger log = LoggerFactory.getLogger(ConnectableHelper.class);
 
@@ -110,104 +81,6 @@ public class ConnectableHelper {
     log.trace("addFloat32() - field = '{}' value = '{}'", field, value);
     Float result = null != value ? value.floatValue() : null;
     struct.put(field, result);
-  }
-
-  public static void toTimestamp(Struct struct, String field, XMLGregorianCalendar value) {
-    log.trace("addTimestamp() - field = '{}' value = '{}'", field, value);
-    throw new UnsupportedOperationException();
-  }
-
-  public static void addConnectableList(Struct struct, String field, List<? extends Connectable> value) {
-    log.trace("addConnectableList() - field = '{}' value = '{}'", field, value);
-    throw new UnsupportedOperationException();
-  }
-
-  public static void toString(Struct struct, String field, Enum value) {
-    log.trace("toString() - field = '{}' value = '{}'", field, value);
-    throw new UnsupportedOperationException();
-  }
-
-  public static void addConnectable(Struct struct, String field, Connectable value) {
-    log.trace("addConnectable() - field = '{}' value = '{}'", field, value);
-    throw new UnsupportedOperationException();
-  }
-
-  public static void addXmlgDay(Struct struct, String field, XMLGregorianCalendar value) {
-    log.trace("addXmlgDay() - field = '{}' value = '{}'", field, value);
-    throw new UnsupportedOperationException();
-  }
-
-  public static void addXmlgMonth(Struct struct, String field, XMLGregorianCalendar value) {
-    log.trace("addXmlgMonth() - field = '{}' value = '{}'", field, value);
-    throw new UnsupportedOperationException();
-  }
-
-  public static void addXmlgMonthDay(Struct struct, String field, XMLGregorianCalendar value) {
-    log.trace("addXmlgMonthDay() - field = '{}' value = '{}'", field, value);
-    throw new UnsupportedOperationException();
-  }
-
-  public static void addXmlgYear(Struct struct, String field, XMLGregorianCalendar value) {
-    log.trace("addXmlgYear() - field = '{}' value = '{}'", field, value);
-    throw new UnsupportedOperationException();
-  }
-
-  public static void addXmlgYearMonth(Struct struct, String field, XMLGregorianCalendar value) {
-    log.trace("addXmlgYearMonth() - field = '{}' value = '{}'", field, value);
-    throw new UnsupportedOperationException();
-  }
-
-
-  public static <T extends Connectable> List<T> fromListToConnectableList(Struct input, String field, Class<T> cls) {
-    final List<T> result = new ArrayList<>();
-    final List<Struct> structs = input.getArray(field);
-
-    if (null != structs & !structs.isEmpty()) {
-      for (Struct struct : structs) {
-        T item = fromStructToConnectable(struct, cls);
-        result.add(item);
-      }
-    }
-    return result;
-  }
-
-  private static <T extends Connectable> T fromStructToConnectable(Struct struct, Class<T> cls) {
-    final T result;
-    try {
-      result = cls.newInstance();
-    } catch (InstantiationException | IllegalAccessException e) {
-      throw new IllegalStateException(
-          String.format(
-              "Exception thrown while creating instance of %s", cls
-          ),
-          e
-      );
-    }
-    result.fromStruct(struct);
-    return result;
-  }
-
-  public static <T extends Connectable> T fromStructToConnectable(Struct input, String field, Class<T> cls) {
-    final T result;
-    final Struct struct = input.getStruct(field);
-
-    if (null == struct) {
-      result = null;
-    } else {
-      try {
-        result = cls.newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        throw new IllegalStateException(
-            String.format(
-                "Exception thrown while creating instance of %s", cls
-            ),
-            e
-        );
-      }
-      result.fromStruct(struct);
-    }
-
-    return result;
   }
 
   public static void toString(Struct struct, String field, String value) {
@@ -249,25 +122,13 @@ public class ConnectableHelper {
 
   public static XMLGregorianCalendar fromDate(Struct struct, String field) {
     log.trace("fromDate() - field = '{}'", field);
-    final XMLGregorianCalendar result;
-    final Date date = (Date) struct.get(field);
-
-    if (null == date) {
-      result = null;
-    } else {
+    return readXmlG(struct, field, Date.class, (xmlGregorianCalendar, connectValue) -> {
       GregorianCalendar calendar = new GregorianCalendar();
-      calendar.setTime(date);
-      try {
-        result = DatatypeFactory.newInstance().newXMLGregorianCalendar();
-        result.setYear(calendar.get(Calendar.YEAR));
-        result.setMonth(calendar.get(Calendar.MONTH) + 1);
-        result.setDay(calendar.get(Calendar.DAY_OF_MONTH));
-      } catch (DatatypeConfigurationException e) {
-        throw new IllegalStateException(e);
-      }
-    }
-
-    return result;
+      calendar.setTime(connectValue);
+      xmlGregorianCalendar.setYear(calendar.get(Calendar.YEAR));
+      xmlGregorianCalendar.setMonth(calendar.get(Calendar.MONTH) + 1);
+      xmlGregorianCalendar.setDay(calendar.get(Calendar.DAY_OF_MONTH));
+    });
   }
 
   public static void toArray(Struct struct, String field, List<? extends Connectable> value) {
@@ -445,6 +306,7 @@ public class ConnectableHelper {
       c.setTime(date);
       try {
         result = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
+        result.setTimezone(0);
       } catch (DatatypeConfigurationException e) {
         throw new DataException("Exception thrown", e);
       }

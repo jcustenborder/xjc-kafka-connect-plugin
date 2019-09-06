@@ -188,7 +188,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     );
     add(result, this.types.schemaBuilder().staticInvoke("string"), this.types.schema().staticRef("STRING_SCHEMA"), "toString", "fromString",
         "anySimpleType", "normalizedString", "anyURI", "ENTITY", "Name", "NCName", "token",
-        "ID", "IDREF", "language"
+        "ID", "IDREF", "language", "NMTOKEN"
     );
     add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgDay", "fromXmlgDay", "gDay");
     add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgMonth", "fromXmlgMonth", "gMonth");

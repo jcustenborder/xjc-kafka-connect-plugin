@@ -7,12 +7,12 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import simpletypes.SimpleTypes;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -80,6 +80,16 @@ public abstract class AbstractRoundTripTest<T extends Connectable> {
                 BaseEncoding.base32Hex().encode(abytes),
                 String.format("%s should match.", method.getName())
             );
+          } else if (XMLGregorianCalendar.class.equals(method.getReturnType())) {
+            XMLGregorianCalendar eValue = (XMLGregorianCalendar) exp;
+            XMLGregorianCalendar aValue = (XMLGregorianCalendar) act;
+
+            assertEquals(eValue.getYear(), aValue.getYear(), "year");
+            assertEquals(eValue.getMonth(), aValue.getMonth(), "month");
+            assertEquals(eValue.getDay(), aValue.getDay(), "day");
+            assertEquals(eValue.getHour(), aValue.getHour(), "hour");
+            assertEquals(eValue.getMinute(), aValue.getMinute(), "minute");
+            assertEquals(eValue.getSecond(), aValue.getSecond(), "second");
           } else {
             assertEquals(exp, act, String.format("%s should match.", method.getName()));
           }

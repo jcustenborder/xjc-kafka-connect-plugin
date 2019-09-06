@@ -14,6 +14,7 @@
                test_gMonth="--02"
                test_gYear="2001"
                test_gMonthDay="--05-01"
+               test_gYearMonth="2001-10"
                test_hexBinary="0FB8"
                test_ID="asdfascvassr"
                test_language="en-us"
@@ -36,4 +37,5 @@
                test_unsignedInt="123456"
                test_unsignedLong="123456789"
                test_unsignedShort="1234"
+               test_NMTOKEN="adfdasdfa"
                foo="bar"/>
