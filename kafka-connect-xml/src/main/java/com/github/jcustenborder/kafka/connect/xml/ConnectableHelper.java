@@ -42,6 +42,8 @@ import java.util.function.Function;
 
 public class ConnectableHelper {
   public static final Schema QNAME_SCHEMA = qnameBuilder().build();
+  static final TimeZone UTC_TIME_ZONE = TimeZone.getTimeZone("UTC");
+  private static final Logger log = LoggerFactory.getLogger(ConnectableHelper.class);
 
   public static final SchemaBuilder qnameBuilder() {
     return SchemaBuilder.struct()
@@ -50,8 +52,6 @@ public class ConnectableHelper {
         .field("prefix", Schema.OPTIONAL_STRING_SCHEMA)
         .field("namespaceURI", Schema.OPTIONAL_STRING_SCHEMA);
   }
-
-  private static final Logger log = LoggerFactory.getLogger(ConnectableHelper.class);
 
   public static void toInt64(Struct struct, String field, Number value) {
     log.trace("toInt64() - field = '{}' value = '{}'", field, value);
@@ -267,8 +267,6 @@ public class ConnectableHelper {
     Integer result = null != value ? value.intValue() : null;
     struct.put(field, result);
   }
-
-  static final TimeZone UTC_TIME_ZONE = TimeZone.getTimeZone("UTC");
 
   public static void toTime(Struct struct, String field, XMLGregorianCalendar value) {
     log.trace("toTime() - field = '{}' value = '{}'", field, value);
@@ -552,10 +550,6 @@ public class ConnectableHelper {
     return result;
   }
 
-  interface FromXmlG<T> {
-    void apply(XMLGregorianCalendar xmlGregorianCalendar, T connectValue);
-  }
-
   static void writeXmlG(Struct struct, String field, XMLGregorianCalendar value, Function<XMLGregorianCalendar, Object> function) {
     log.trace("writeXmlG() - field = '{}' value = '{}'", field, value);
     Object result;
@@ -608,11 +602,15 @@ public class ConnectableHelper {
     return result;
   }
 
-
   public static XMLGregorianCalendar fromXmlgYear(Struct struct, String field) {
     log.trace("fromXmlgYear() - field = '{}'", field);
     return readXmlG(struct, field, Integer.class, (xmlGregorianCalendar, connectValue) -> {
       xmlGregorianCalendar.setYear(connectValue);
     });
+  }
+
+
+  interface FromXmlG<T> {
+    void apply(XMLGregorianCalendar xmlGregorianCalendar, T connectValue);
   }
 }

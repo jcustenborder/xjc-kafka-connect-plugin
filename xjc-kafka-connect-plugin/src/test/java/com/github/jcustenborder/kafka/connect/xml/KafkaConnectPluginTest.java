@@ -29,8 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
-import javax.xml.datatype.DatatypeConstants;
-import javax.xml.datatype.Duration;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -48,12 +46,6 @@ public class KafkaConnectPluginTest {
 
   private final File outputDirectoryRoot = new File("target/connect-plugin");
   private final File inputDirectory = new File("src/test/resources/com/github/jcustenborder/kafka/connect/xml");
-
-  void test(File schemaFile) throws IOException {
-    InputSource is = new InputSource(schemaFile.toURI().toString());
-    File outputDirectory = new File(outputDirectoryRoot, schemaFile.getName());
-    test(is, outputDirectory);
-  }
 
   static void compile(InputSource is, File outputDirectory, Plugin... plugins) throws IOException {
     if (!outputDirectory.isDirectory()) {
@@ -89,6 +81,11 @@ public class KafkaConnectPluginTest {
     jCodeModel.build(outputDirectory);
   }
 
+  void test(File schemaFile) throws IOException {
+    InputSource is = new InputSource(schemaFile.toURI().toString());
+    File outputDirectory = new File(outputDirectoryRoot, schemaFile.getName());
+    test(is, outputDirectory);
+  }
 
   void test(InputSource is, File outputDirectory) throws IOException {
     File beforeDirectory = new File(outputDirectory, "before");

@@ -39,9 +39,6 @@ class AnnotationUtils {
 
   public static Map<String, Object> xmlSchemaType(JCodeModel codeModel, JFieldVar field) {
     final Map<String, Object> result = annotationAttributes(codeModel, field, XmlSchemaType.class);
-    if (null == result) {
-      return null;
-    }
     return result;
   }
 

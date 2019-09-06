@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,21 +15,12 @@
  */
 package com.github.jcustenborder.kafka.connect.xml;
 
-import org.apache.kafka.connect.data.Struct;
 import org.junit.jupiter.api.Test;
-//import simpletypes.ObjectFactory;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+//import simpletypes.ObjectFactory;
 
 public class BuildInSchemaTests {
 
@@ -86,8 +77,6 @@ public class BuildInSchemaTests {
 ////    <test_unsignedShort>1234</test_unsignedShort>
 
   }
-
-
 
 
 }
