@@ -14,20 +14,20 @@
         <xsd:attribute name="test_dateTime" type="xsd:dateTime"/>
         <xsd:attribute name="test_decimal" type="xsd:decimal"/>
         <xsd:attribute name="test_double" type="xsd:double"/>
-        <!--<xsd:attribute name="test_duration" type="xsd:duration"/>-->
-        <xsd:attribute name="test_ENTITIES" type="xsd:ENTITIES"/>
+        <xsd:attribute name="test_duration" type="xsd:duration"/>
+<!--        <xsd:attribute name="test_ENTITIES" type="xsd:ENTITIES"/>-->
         <xsd:attribute name="test_ENTITY" type="xsd:ENTITY"/>
         <xsd:attribute name="test_float" type="xsd:float"/>
         <xsd:attribute name="test_gDay" type="xsd:gDay"/>
         <xsd:attribute name="test_gMonth" type="xsd:gMonth"/>
-        <!--<xsd:attribute name="test_gMonthDay" type="xsd:gMonthDay"/>-->
+        <xsd:attribute name="test_gMonthDay" type="xsd:gMonthDay"/>
         <xsd:attribute name="test_gYear" type="xsd:gYear"/>
-        <!--<xsd:attribute name="test_gYearMonth" type="xsd:gYearMonth"/>-->
+        <xsd:attribute name="test_gYearMonth" type="xsd:gYearMonth"/>
         <xsd:attribute name="test_hexBinary" type="xsd:hexBinary"/>
-        <!--<xsd:attribute name="test_ID" type="xsd:ID"/>-->
+        <xsd:attribute name="test_ID" type="xsd:ID"/>
         <xsd:attribute name="test_int" type="xsd:int"/>
         <xsd:attribute name="test_integer" type="xsd:integer"/>
-        <!--<xsd:attribute name="test_language" type="xsd:language"/>-->
+        <xsd:attribute name="test_language" type="xsd:language"/>
         <xsd:attribute name="test_long" type="xsd:long"/>
         <xsd:attribute name="test_Name" type="xsd:Name"/>
         <xsd:attribute name="test_NCName" type="xsd:NCName"/>
@@ -38,7 +38,7 @@
         <xsd:attribute name="test_nonPositiveInteger" type="xsd:nonPositiveInteger"/>
         <xsd:attribute name="test_normalizedString" type="xsd:normalizedString"/>
         <xsd:attribute name="test_positiveInteger" type="xsd:positiveInteger"/>
-        <!--<xsd:attribute name="test_QName" type="xsd:QName"/>-->
+        <xsd:attribute name="test_QName" type="xsd:QName"/>
         <xsd:attribute name="test_short" type="xsd:short"/>
         <xsd:attribute name="test_string" type="xsd:string"/>
         <xsd:attribute name="test_time" type="xsd:time"/>
@@ -47,5 +47,6 @@
         <xsd:attribute name="test_unsignedInt" type="xsd:unsignedInt"/>
         <xsd:attribute name="test_unsignedLong" type="xsd:unsignedLong"/>
         <xsd:attribute name="test_unsignedShort" type="xsd:unsignedShort"/>
+        <xsd:anyAttribute/>
     </xsd:complexType>
 </xsd:schema>

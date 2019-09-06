@@ -40,6 +40,8 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.datatype.Duration;
+import javax.xml.namespace.QName;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -147,10 +149,14 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     add(result, this.types.schemaBuilder().staticInvoke("int16"), this.types.schema().staticRef("INT16_SCHEMA"), "toInt16", "fromInt16", codeModel, short.class, Short.class);
     add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("IN32_SCHEMA"), "toInt32", "fromInt32", codeModel, int.class, Integer.class);
     add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("IN64_SCHEMA"), "toInt64", "fromInt64", codeModel, long.class, Long.class);
-    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("IN64_SCHEMA"), "toInt64", "fromInt64", codeModel, BigInteger.class);
+    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("IN64_SCHEMA"), "toInt64", "fromInt64BigInteger", codeModel, BigInteger.class);
     add(result, this.types.schemaBuilder().staticInvoke("bytes"), this.types.schema().staticRef("BYTES_SCHEMA"), "toBytes", "fromBytes", codeModel, byte[].class);
     add(result, this.types.schemaBuilder().staticInvoke("string"), this.types.schema().staticRef("STRING_SCHEMA"), "toString", "fromString", codeModel, String.class);
-    add(result, this.types.bigDecimal().staticInvoke("builder").arg(JExpr.lit(12)), null, "toDecimal", "fromDecimal", codeModel, BigDecimal.class);
+    add(result, this.types.decimal().staticInvoke("builder").arg(JExpr.lit(12)), null, "toDecimal", "fromDecimal", codeModel, BigDecimal.class);
+
+    add(result, this.types.connectableHelper().staticInvoke("qnameBuilder"), null, "toQname", "fromQname", codeModel, QName.class);
+    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("IN64_SCHEMA"), "toDuration", "fromDuration", codeModel, Duration.class);
+
     return ImmutableMap.copyOf(result);
   }
 
@@ -173,22 +179,26 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     add(result, this.types.time().staticInvoke("builder"), this.types.time().staticRef("SCHEMA"), "toTime", "fromTime", "time");
     add(result, this.types.timestamp().staticInvoke("builder"), this.types.timestamp().staticRef("BOOLEAN_SCHEMA"), "toDateTime", "fromDateTime", "dateTime");
     add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toInt32", "fromInt32", "unsignedShort", "int");
-    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("INT64_SCHEMA"), "toInt64", "fromInt64",
+    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("INT64_SCHEMA"), "toInt64", "fromInt64BigInteger",
         "negativeInteger", "nonNegativeInteger", "nonPositiveInteger", "negativeInteger",
-        "unsignedLong", "positiveInteger", "unsignedInt"
+        "unsignedLong", "positiveInteger"
+    );
+    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("INT64_SCHEMA"), "toInt64", "fromInt64",
+        "unsignedInt"
     );
     add(result, this.types.schemaBuilder().staticInvoke("string"), this.types.schema().staticRef("STRING_SCHEMA"), "toString", "fromString",
         "anySimpleType", "normalizedString", "anyURI", "ENTITY", "Name", "NCName", "token",
-        "ID", "IDREF"
+        "ID", "IDREF", "language"
     );
     add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgDay", "fromXmlgDay", "gDay");
-    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgMonth", "fromXmlgDay", "gMonth");
-    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgMonthDay", "fromXmlgDay", "gMonthDay");
-    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgYearMonth", "fromXmlgYearMonth", "gYearMonth");
+    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgMonth", "fromXmlgMonth", "gMonth");
+    add(result, this.types.date().staticInvoke("builder"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgMonthDay", "fromXmlgMonthDay", "gMonthDay");
+    add(result, this.types.date().staticInvoke("builder"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgYearMonth", "fromXmlgYearMonth", "gYearMonth");
     add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgYear", "fromXmlgYear", "gYear");
     add(result, this.types.schemaBuilder().staticInvoke("bytes"), this.types.schema().staticRef("BYTES_SCHEMA"), "toBytes", "fromBytes", "base64Binary", "hexBinary");
     add(result, this.types.schemaBuilder().staticInvoke("int16"), this.types.schema().staticRef("INT16_SCHEMA"), "toInt16", "fromInt16", "unsignedByte");
     add(result, this.types.schemaBuilder().staticInvoke("array").arg(this.types.schema().staticRef("STRING")), null, "toArray", "fromArray", "IDREFS");
+
 
     return ImmutableMap.copyOf(result);
   }
@@ -299,7 +309,16 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         ImmutableDefinedTypeState.Builder builder = ImmutableDefinedTypeState.builder()
             .type(type);
 
-        if (this.types.list().equals(basis)) {
+        if (this.types.qNameMap().equals(jClass)) {
+          // This case pops up when anyattribute is in use.
+          JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("map")
+              .arg(this.types.connectableHelper().staticRef("QNAME_SCHEMA"))
+              .arg(this.types.schema().staticRef("OPTIONAL_STRING_SCHEMA"));
+          builder.schemaBuilder(schemaBuilder);
+          builder.readMethod("toQNameMap");
+          builder.writeMethod("fromQNameMap");
+          return builder.build();
+        } else if (this.types.list().equals(basis)) {
           JClass valueType = args.get(0);
           State valueState = type(codeModel, classOutline, field, valueType);
 

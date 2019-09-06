@@ -21,6 +21,7 @@ import com.sun.codemodel.JType;
 import org.immutables.value.Value;
 
 import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.namespace.QName;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -31,6 +32,11 @@ import java.util.Set;
 @Value.Immutable
 interface Types {
   static Types build(JCodeModel codeModel) {
+    JClass mapClass = codeModel.ref(Map.class);
+    JClass qNameClass = codeModel.ref(QName.class);
+    JClass stringClass = codeModel.ref(String.class);
+    JClass qNameMapClass = mapClass.narrow(qNameClass, stringClass);
+
     return ImmutableTypes.builder()
         .list(codeModel.ref(List.class))
         .arrayList(codeModel.ref(List.class))
@@ -44,7 +50,10 @@ interface Types {
         .connectable(codeModel.ref("com.github.jcustenborder.kafka.connect.xml.Connectable"))
         .bigInteger(codeModel.ref(BigInteger.class))
         .bigDecimal(codeModel.ref(BigDecimal.class))
-        .map(codeModel.ref(Map.class))
+        .map(mapClass)
+        .qName(qNameClass)
+        .qNameMap(qNameMapClass)
+        .string(stringClass)
         .connectableHelper(codeModel.ref("com.github.jcustenborder.kafka.connect.xml.ConnectableHelper"))
         .xmlGregorianCalendar(codeModel.ref(XMLGregorianCalendar.class))
         .addBlackListTypes(codeModel.ref(Object.class))
@@ -73,6 +82,12 @@ interface Types {
   JClass list();
 
   JClass map();
+
+  JClass qName();
+
+  JClass qNameMap();
+
+  JClass string();
 
   JClass arrayList();
 

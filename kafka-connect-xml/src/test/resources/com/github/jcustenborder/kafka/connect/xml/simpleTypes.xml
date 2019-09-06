@@ -7,7 +7,6 @@
     <test_dateTime>2012-11-12T12:00:00</test_dateTime>
     <test_decimal>123412.20</test_decimal>
     <test_double>123412.20</test_double>
-    <test_ENTITIES>asdf</test_ENTITIES>
     <test_ENTITY>asdf</test_ENTITY>
     <test_float>123.41</test_float>
     <test_gDay>---31</test_gDay>
