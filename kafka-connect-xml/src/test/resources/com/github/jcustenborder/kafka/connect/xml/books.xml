@@ -18,5 +18,8 @@
         <price>24.95</price>
         <pub_date>2000-10-01</pub_date>
         <review>Least poetic poems.</review>
+        <review>...meh</review>
+        <note>2</note>
+        <score>23.12</score>
     </book>
 </x:books>

@@ -1,0 +1,52 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="urn:test"
+            xmlns:tst="urn:test"
+            elementFormDefault="qualified">
+
+    <xsd:element name="test">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="test_string_array" type="tst:TestStringArray" minOccurs="0"/>
+                <xsd:element name="test_int_array" type="tst:TestIntArray" minOccurs="0"/>
+                <xsd:element name="test_integer_array" type="tst:TestIntegerArray" minOccurs="0"/>
+                <xsd:element name="test_decimal_array" type="tst:TestDecimalArray" minOccurs="0"/>
+                <xsd:element name="test_double_array" type="tst:TestDoubleArray" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="TestStringArray">
+        <xsd:sequence>
+            <xsd:element name="element" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- xsd:integer is unbounded integer number -->
+    <xsd:complexType name="TestIntegerArray">
+        <xsd:sequence>
+            <xsd:element name="element" type="xsd:integer" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- xsd:int is 32-bit integer -->
+    <xsd:complexType name="TestIntArray">
+        <xsd:sequence>
+            <xsd:element name="element" type="xsd:int" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- xsd:decimal is decimal number with optional decimal fraction part -->
+    <xsd:complexType name="TestDecimalArray">
+        <xsd:sequence>
+            <xsd:element name="element" type="xsd:decimal" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- xsd:double is decimal number representable as 64-bit IEEE 754 floating number -->
+    <xsd:complexType name="TestDoubleArray">
+        <xsd:sequence>
+            <xsd:element name="element" type="xsd:double" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+</xsd:schema>

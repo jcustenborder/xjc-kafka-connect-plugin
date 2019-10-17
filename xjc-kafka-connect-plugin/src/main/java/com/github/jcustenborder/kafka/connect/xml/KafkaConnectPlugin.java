@@ -147,9 +147,9 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     add(result, this.types.schemaBuilder().staticInvoke("float64"), this.types.schema().staticRef("FLOAT64_SCHEMA"), "toFloat64", "fromFloat64", codeModel, double.class, Double.class);
     add(result, this.types.schemaBuilder().staticInvoke("int8"), this.types.schema().staticRef("INT8_SCHEMA"), "toInt8", "fromInt8", codeModel, byte.class, Byte.class);
     add(result, this.types.schemaBuilder().staticInvoke("int16"), this.types.schema().staticRef("INT16_SCHEMA"), "toInt16", "fromInt16", codeModel, short.class, Short.class);
-    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("IN32_SCHEMA"), "toInt32", "fromInt32", codeModel, int.class, Integer.class);
-    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("IN64_SCHEMA"), "toInt64", "fromInt64", codeModel, long.class, Long.class);
-    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("IN64_SCHEMA"), "toInt64", "fromInt64BigInteger", codeModel, BigInteger.class);
+    add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toInt32", "fromInt32", codeModel, int.class, Integer.class);
+    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("INT64_SCHEMA"), "toInt64", "fromInt64", codeModel, long.class, Long.class);
+    add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("INT64_SCHEMA"), "toInt64", "fromInt64BigInteger", codeModel, BigInteger.class);
     add(result, this.types.schemaBuilder().staticInvoke("bytes"), this.types.schema().staticRef("BYTES_SCHEMA"), "toBytes", "fromBytes", codeModel, byte[].class);
     add(result, this.types.schemaBuilder().staticInvoke("string"), this.types.schema().staticRef("STRING_SCHEMA"), "toString", "fromString", codeModel, String.class);
     add(result, this.types.decimal().staticInvoke("builder").arg(JExpr.lit(12)), null, "toDecimal", "fromDecimal", codeModel, BigDecimal.class);
@@ -322,8 +322,12 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
           JClass valueType = args.get(0);
           State valueState = type(codeModel, classOutline, field, valueType);
 
+          JExpression valueSchema = valueState.schema();
+          if (valueSchema==null) {
+        	  valueSchema = valueState.schemaBuilder().invoke("build");
+          }
           JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("array")
-              .arg(valueState.schema());
+              .arg(valueSchema);
           builder.schemaBuilder(schemaBuilder);
           builder.readMethod("toArray");
           builder.writeMethod("fromArray");
@@ -332,11 +336,19 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         } else if (this.types.map().equals(basis)) {
           JClass keyType = args.get(0);
           State keyState = type(codeModel, classOutline, field, keyType);
+          JExpression keySchema = keyState.schema();
+          if (keySchema==null) {
+        	  keySchema = keyState.schemaBuilder().invoke("build");
+          }
           JClass valueType = args.get(1);
           State valueState = type(codeModel, classOutline, field, valueType);
+          JExpression valueSchema = valueState.schema();
+          if (valueSchema==null) {
+        	  valueSchema = valueState.schemaBuilder().invoke("build");
+          }
           JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("map")
-              .arg(keyState.schema())
-              .arg(valueState.schema());
+              .arg(keySchema)
+              .arg(valueSchema);
           builder.schemaBuilder(schemaBuilder);
           builder.readMethod("toMap");
           builder.writeMethod("fromMap");

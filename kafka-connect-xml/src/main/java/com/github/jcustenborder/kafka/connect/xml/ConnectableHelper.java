@@ -131,39 +131,47 @@ public class ConnectableHelper {
     });
   }
 
-  public static void toArray(Struct struct, String field, List<? extends Connectable> value) {
-    final List<Struct> result;
-
+  public static void toArray(Struct struct, String field, List<?> value) {
+    final List<Object> result;
     if (null == value) {
       result = null;
     } else {
       result = new ArrayList<>(value.size());
-      for (Connectable o : value) {
-        Struct s = o.toStruct();
-        result.add(s);
+      for (Object o : value) {
+        if (o instanceof Connectable) {
+          result.add(((Connectable)o).toStruct());
+        } else {
+          result.add(o);
+        }
       }
 
     }
     struct.put(field, result);
   }
 
-  public static <T extends Connectable> List<T> fromArray(Struct struct, String field, Class<T> cls) {
-    List<Struct> structs = struct.getArray(field);
+  public static <T> List<T> fromArray(Struct struct, String field, Class<T> cls) {
+    List<Object> structs = struct.getArray(field);
     List<T> result;
 
     if (null == structs) {
       result = null;
     } else {
       result = new ArrayList<>(structs.size());
-      for (Struct s : structs) {
-        T o;
-        try {
-          o = cls.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-          throw new IllegalStateException(e);
+      for (Object s : structs) {
+        if (s instanceof Struct && Connectable.class.isAssignableFrom(cls)) {
+          T o;
+          try {
+            o = cls.newInstance();
+          } catch (InstantiationException | IllegalAccessException e) {
+            throw new IllegalStateException(e);
+          }
+          ((Connectable)o).fromStruct((Struct)s);
+          result.add(o);
+        } else if (cls.isInstance(s)){
+          result.add(cls.cast(s));
+        } else {
+          throw new IllegalArgumentException("Element not castable to the target class");
         }
-        o.fromStruct(s);
-        result.add(o);
       }
     }
 
