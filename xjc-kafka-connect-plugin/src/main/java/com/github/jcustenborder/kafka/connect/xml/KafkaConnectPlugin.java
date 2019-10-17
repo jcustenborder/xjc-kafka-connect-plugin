@@ -322,8 +322,12 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
           JClass valueType = args.get(0);
           State valueState = type(codeModel, classOutline, field, valueType);
 
+          JExpression valueSchema = valueState.schema();
+          if (valueSchema==null) {
+        	  valueSchema = valueState.schemaBuilder().invoke("build");
+          }
           JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("array")
-              .arg(valueState.schema());
+              .arg(valueSchema);
           builder.schemaBuilder(schemaBuilder);
           builder.readMethod("toArray");
           builder.writeMethod("fromArray");
@@ -332,11 +336,19 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         } else if (this.types.map().equals(basis)) {
           JClass keyType = args.get(0);
           State keyState = type(codeModel, classOutline, field, keyType);
+          JExpression keySchema = keyState.schema();
+          if (keySchema==null) {
+        	  keySchema = keyState.schemaBuilder().invoke("build");
+          }
           JClass valueType = args.get(1);
           State valueState = type(codeModel, classOutline, field, valueType);
+          JExpression valueSchema = valueState.schema();
+          if (valueSchema==null) {
+        	  valueSchema = valueState.schemaBuilder().invoke("build");
+          }
           JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("map")
-              .arg(keyState.schema())
-              .arg(valueState.schema());
+              .arg(keySchema)
+              .arg(valueSchema);
           builder.schemaBuilder(schemaBuilder);
           builder.readMethod("toMap");
           builder.writeMethod("fromMap");
