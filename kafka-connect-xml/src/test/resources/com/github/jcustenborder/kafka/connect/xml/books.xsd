@@ -23,15 +23,15 @@
             <xsd:element name="pub_date" type="xsd:date"/>
             <xsd:element name="review" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="note" type="xsd:int" minOccurs="0" maxOccurs="unbounded"/>
-            <xsd:element name="price" type="bks:price" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="score" type="bks:score" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
         <xsd:attribute name="id" type="xsd:string"/>
     </xsd:complexType>
     
-    <xs:simpleType name="price">
-      <xs:restriction base="xs:decimal">
-        <xs:fractionDigits value="2"/>
-      </xs:restriction>
-    </xs:simpleType>
+    <xsd:simpleType name="score">
+      <xsd:restriction base="xsd:decimal">
+        <xsd:fractionDigits value="2"/>
+      </xsd:restriction>
+    </xsd:simpleType>
 
 </xsd:schema>
