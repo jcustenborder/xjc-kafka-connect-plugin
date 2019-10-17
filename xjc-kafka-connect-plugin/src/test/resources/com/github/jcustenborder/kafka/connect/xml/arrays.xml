@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<x:test xmlns:x="urn:test">
+  <x:test_string_array>
+    <x:element>entry 1</x:element>
+    <x:element>entry 2</x:element>
+  </x:test_string_array>
+  <x:test_int_array>
+    <x:element>1</x:element>
+    <x:element>2345</x:element>
+  </x:test_int_array>
+  <x:test_integer_array>
+    <x:element>1</x:element>
+    <x:element>-32</x:element>
+  </x:test_integer_array>
+  <x:test_decimal_array>
+    <x:element>100.232</x:element>
+    <x:element>-4667</x:element>
+  </x:test_decimal_array>
+  <x:test_double_array>
+    <x:element>100.232</x:element>
+    <x:element>-4667</x:element>
+  </x:test_double_array>
+</x:test>
