@@ -21,8 +21,17 @@
             <xsd:element name="genre" type="xsd:string"/>
             <xsd:element name="price" type="xsd:float"/>
             <xsd:element name="pub_date" type="xsd:date"/>
-            <xsd:element name="review" type="xsd:string"/>
+            <xsd:element name="review" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="note" type="xsd:int" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="price" type="bks:price" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
         <xsd:attribute name="id" type="xsd:string"/>
     </xsd:complexType>
+    
+    <xs:simpleType name="price">
+      <xs:restriction base="xs:decimal">
+        <xs:fractionDigits value="2"/>
+      </xs:restriction>
+    </xs:simpleType>
+
 </xsd:schema>
