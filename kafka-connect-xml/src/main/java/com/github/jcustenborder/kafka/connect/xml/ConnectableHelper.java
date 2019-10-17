@@ -16,6 +16,8 @@
 package com.github.jcustenborder.kafka.connect.xml;
 
 import com.google.common.base.Preconditions;
+
+import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -51,6 +53,60 @@ public class ConnectableHelper {
         .field("localPart", Schema.STRING_SCHEMA)
         .field("prefix", Schema.OPTIONAL_STRING_SCHEMA)
         .field("namespaceURI", Schema.OPTIONAL_STRING_SCHEMA);
+  }
+
+  /**
+   * When schema is optional create a clone with optional flag unset.
+   */
+  public static final Schema required(Schema schema) {
+    if (!schema.isOptional()) return schema;
+    return builder(schema).required().build();
+  }
+
+  /**
+   * When schema is not optional create a clone with optional flag set.
+   */
+  public static final Schema optional(Schema schema) {
+    if (schema.isOptional()) return schema;
+    return builder(schema).optional().build();
+  }
+
+  /**
+   * Prepare a {@link SchemaBuilder} that is prefilled with the same values
+   * as the given {@link Schema}, but without setting the {@link Schema#isOptional()}
+   * flag. In Kafka Connect the object schema contains the flag if object
+   * could be null and this flag is rigorously checked during assignments.
+   */
+  public static final SchemaBuilder builder(Schema schema) {
+    SchemaBuilder builder;
+    if (schema.type()==Schema.Type.ARRAY) {
+      builder = SchemaBuilder.array(schema.valueSchema());
+    } else if (schema.type()==Schema.Type.MAP) {
+      builder = SchemaBuilder.map(schema.keySchema(), schema.valueSchema());
+    } else if (schema.type()==Schema.Type.STRUCT) {
+      builder = SchemaBuilder.struct();
+      for (Field field : schema.fields()) {
+        builder.field(field.name(), field.schema());
+      }
+    } else {
+      builder = SchemaBuilder.type(schema.type());
+    }
+    if (schema.defaultValue()!=null) {
+      builder.defaultValue(schema.defaultValue());
+    }
+    if (schema.doc()!=null) {
+      builder.doc(schema.doc());
+    }
+    if (schema.parameters()!=null) {
+      builder.parameters(schema.parameters());
+    }
+    if (schema.name()!=null) {
+      builder.name(schema.name());
+    }
+    if (schema.version()!=null) {
+      builder.version(schema.version());
+    }
+    return builder;
   }
 
   public static void toInt64(Struct struct, String field, Number value) {
