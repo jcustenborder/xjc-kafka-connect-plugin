@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -202,7 +203,7 @@ public class ConnectableHelper {
       }
 
     }
-    struct.put(field, result);
+    struct.put(field, castArray(result, struct.schema().field(field).schema()));
   }
 
   public static <T> List<T> fromArray(Struct struct, String field, Class<T> cls) {
@@ -253,7 +254,72 @@ public class ConnectableHelper {
     } else {
       fieldStruct = value.toStruct();
     }
-    struct.put(field, fieldStruct);
+    // the field may be marked required as field type, but optional as
+    // object type; in such case the assignment will fail.
+    struct.put(field, castStruct(fieldStruct, struct.schema().field(field).schema()));
+  }
+
+  /**
+   * The method builds a new struct compliant with the target schema and
+   * iterates over the fields of the source struct to adapt them to the
+   * target schema fields.
+   */
+  public static Struct castStruct(Struct struct, Schema schema) {
+    if (struct==null) return null;
+    Struct result = new Struct(schema);
+    for (Field field : schema.fields()) {
+      result.put(field, castObject(struct.get(field.name()), field.schema()));
+    }
+    return result;
+  }
+
+  /**
+   * The method rebuilds the array by applying casting of each element
+   * to the target schema value schema.
+   */
+  public static List<Object> castArray(List<?> array, Schema schema) {
+    if (array==null) return null;
+    List<Object> result = new ArrayList<Object>(array.size());
+    for (Object element : array) {
+      result.add(castObject(element, schema.valueSchema()));
+    }
+    return result;
+  }
+
+  /**
+   * The method rebuilds the map by applying casting of each key/value entry
+   * to the target schema key and value schemas.
+   */
+  public static Map<Object, Object> castMap(Map<?, ?> map, Schema schema) {
+    if (map==null) return null;
+    Map<Object, Object> result = new HashMap<Object, Object>();
+    for (Map.Entry<?, ?> entry : map.entrySet()) {
+      result.put(castObject(entry.getKey(), schema.keySchema()), castObject(entry.getValue(), schema.valueSchema()));
+    }
+    return result;
+  }
+
+  /**
+   * Method casts the object to the target schema. It solves the problem
+   * where the {@link Struct#put(Field, Object)} call validates strictly
+   * the submitted content, even if the only difference is that the schema
+   * is marked required or optional. This call executes dispatching to 
+   * the specific object type.
+   * @param object object to be cast
+   * @param schema target schema
+   */
+  public static Object castObject(Object object, Schema schema) {
+    if (object==null) return null;
+    switch (schema.type()) {
+    case STRUCT:
+      return castStruct((Struct)object, schema);
+    case ARRAY:
+      return castArray((List<?>)object, schema);
+    case MAP:
+      return castMap((Map<?,?>)object, schema);
+    default:
+      return object;
+    }
   }
 
   public static <T extends Connectable> T fromStruct(Struct struct, String field, Class<T> aClass) {
