@@ -1,0 +1,32 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="urn:enumerations"
+            xmlns:enms="urn:enumerations">
+
+    <xsd:element name="books" type="enms:BooksForm"/>
+
+    <xsd:complexType name="BooksForm">
+        <xsd:sequence>
+            <xsd:element name="book"
+                         type="enms:BookForm"
+                         minOccurs="0"
+                         maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="BookForm">
+        <xsd:sequence>
+            <xsd:element name="review" type="xsd:string"/>
+            <xsd:element name="bookType" type="enms:BookType"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:string"/>
+    </xsd:complexType>
+
+    <xsd:simpleType name="BookType">
+        <xsd:restriction base="xsd:NCName">
+            <xsd:enumeration value="kindle"/>
+            <xsd:enumeration value="paperback"/>
+            <xsd:enumeration value="hardcover"/>
+            <xsd:enumeration value="audiobook"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+</xsd:schema>

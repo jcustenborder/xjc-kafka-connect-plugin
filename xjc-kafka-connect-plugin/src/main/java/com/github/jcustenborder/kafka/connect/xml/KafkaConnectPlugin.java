@@ -17,6 +17,7 @@ package com.github.jcustenborder.kafka.connect.xml;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.sun.codemodel.ClassType;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JCodeModel;
@@ -39,7 +40,6 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.datatype.Duration;
 import javax.xml.namespace.QName;
 import java.math.BigDecimal;
@@ -272,9 +272,9 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
       return this.definedTypeStateLookup.computeIfAbsent(type, jType -> {
         JDefinedClass jDefinedClass = (JDefinedClass) type;
         ImmutableDefinedTypeState.Builder builder = ImmutableDefinedTypeState.builder();
-        if (null != AnnotationUtils.annotationAttributes(codeModel, field, XmlEnum.class)) {
+        if (targetsEnum(jDefinedClass)) {
           builder.schemaBuilder(this.types.schemaBuilder().staticInvoke("string"));
-          builder.readMethod("toString");
+          builder.readMethod("fromEnum");
           builder.writeMethod("toEnum");
           builder.addWriteMethodArgs(jDefinedClass.dotclass());
         } else {
@@ -388,7 +388,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
       fieldState.name(name);
       fieldState.fieldVar(jFieldVar);
 
-      if (!Strings.isNullOrEmpty(xmlType)) {
+      if (!Strings.isNullOrEmpty(xmlType) && !targetsEnum(jFieldVar)) {
         log.trace("field() - xmlType = '{}'", xmlType);
         XmlTypeState xmlTypeState = this.xmlTypeLookup.get(xmlType);
         if (null == xmlTypeState) {
@@ -425,6 +425,19 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
           ex);
     }
   }
+
+  private boolean targetsEnum(JDefinedClass cls) {
+      return ClassType.ENUM == cls.getClassType();
+  }
+
+  private boolean targetsEnum(JFieldVar field) {
+    if (field.type() instanceof JDefinedClass) {
+      return targetsEnum((JDefinedClass) field.type());
+    }
+
+    return false;
+  }
+
 
   void fields(JCodeModel codeModel, ClassOutline classOutline, List<FieldState> fieldStates) {
     final Map<String, JFieldVar> fields = classOutline.implClass.fields();
