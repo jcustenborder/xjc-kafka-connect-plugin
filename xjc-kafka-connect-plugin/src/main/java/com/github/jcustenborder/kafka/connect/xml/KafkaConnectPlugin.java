@@ -92,23 +92,10 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     constructorBlock.invoke(builderVar, "name").arg(schemaName);
     constructorBlock.invoke(builderVar, "optional");
 
-    final JVar fieldBuilderVar = constructorBlock.decl(this.types.schemaBuilder(), "fieldBuilder");
-
     for (FieldState fieldState : fieldStates) {
-      if (fieldState.schemaBuilder() instanceof JInvocation) {
-        constructorBlock.assign(fieldBuilderVar, fieldState.schemaBuilder());
-        if (!fieldState.required()) {
-          constructorBlock.invoke(fieldBuilderVar, "optional");
-        }
-
         constructorBlock.invoke(builderVar, "field")
-            .arg(fieldState.name())
-            .arg(fieldBuilderVar.invoke("build"));
-      } else {
-        constructorBlock.invoke(builderVar, "field")
-            .arg(fieldState.name())
-            .arg(fieldState.schemaBuilder());
-      }
+          .arg(fieldState.name())
+          .arg(constructorBlock.staticInvoke(types.connectableHelper(), fieldState.required() ? "required" : "optional").arg(fieldState.schemaBuilder()));
     }
 
 
@@ -324,10 +311,11 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
 
           JExpression valueSchema = valueState.schema();
           if (valueSchema==null) {
-        	  valueSchema = valueState.schemaBuilder().invoke("build");
+            valueSchema = valueState.schemaBuilder().invoke("build");
           }
+          // there cannot be an array of nullable elements
           JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("array")
-              .arg(valueSchema);
+              .arg(this.types.connectableHelper().staticInvoke("required").arg(valueSchema));
           builder.schemaBuilder(schemaBuilder);
           builder.readMethod("toArray");
           builder.writeMethod("fromArray");

@@ -16,6 +16,8 @@
 package com.github.jcustenborder.kafka.connect.xml;
 
 import com.google.common.base.Preconditions;
+
+import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
@@ -34,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +54,60 @@ public class ConnectableHelper {
         .field("localPart", Schema.STRING_SCHEMA)
         .field("prefix", Schema.OPTIONAL_STRING_SCHEMA)
         .field("namespaceURI", Schema.OPTIONAL_STRING_SCHEMA);
+  }
+
+  /**
+   * When schema is optional create a clone with optional flag unset.
+   */
+  public static final Schema required(Schema schema) {
+    if (!schema.isOptional()) return schema;
+    return builder(schema).required().build();
+  }
+
+  /**
+   * When schema is not optional create a clone with optional flag set.
+   */
+  public static final Schema optional(Schema schema) {
+    if (schema.isOptional()) return schema;
+    return builder(schema).optional().build();
+  }
+
+  /**
+   * Prepare a {@link SchemaBuilder} that is prefilled with the same values
+   * as the given {@link Schema}, but without setting the {@link Schema#isOptional()}
+   * flag. In Kafka Connect the object schema contains the flag if object
+   * could be null and this flag is rigorously checked during assignments.
+   */
+  public static final SchemaBuilder builder(Schema schema) {
+    SchemaBuilder builder;
+    if (schema.type()==Schema.Type.ARRAY) {
+      builder = SchemaBuilder.array(schema.valueSchema());
+    } else if (schema.type()==Schema.Type.MAP) {
+      builder = SchemaBuilder.map(schema.keySchema(), schema.valueSchema());
+    } else if (schema.type()==Schema.Type.STRUCT) {
+      builder = SchemaBuilder.struct();
+      for (Field field : schema.fields()) {
+        builder.field(field.name(), field.schema());
+      }
+    } else {
+      builder = SchemaBuilder.type(schema.type());
+    }
+    if (schema.defaultValue()!=null) {
+      builder.defaultValue(schema.defaultValue());
+    }
+    if (schema.doc()!=null) {
+      builder.doc(schema.doc());
+    }
+    if (schema.parameters()!=null) {
+      builder.parameters(schema.parameters());
+    }
+    if (schema.name()!=null) {
+      builder.name(schema.name());
+    }
+    if (schema.version()!=null) {
+      builder.version(schema.version());
+    }
+    return builder;
   }
 
   public static void toInt64(Struct struct, String field, Number value) {
@@ -146,7 +203,7 @@ public class ConnectableHelper {
       }
 
     }
-    struct.put(field, result);
+    struct.put(field, castArray(result, struct.schema().field(field).schema()));
   }
 
   public static <T> List<T> fromArray(Struct struct, String field, Class<T> cls) {
@@ -197,7 +254,72 @@ public class ConnectableHelper {
     } else {
       fieldStruct = value.toStruct();
     }
-    struct.put(field, fieldStruct);
+    // the field may be marked required as field type, but optional as
+    // object type; in such case the assignment will fail.
+    struct.put(field, castStruct(fieldStruct, struct.schema().field(field).schema()));
+  }
+
+  /**
+   * The method builds a new struct compliant with the target schema and
+   * iterates over the fields of the source struct to adapt them to the
+   * target schema fields.
+   */
+  public static Struct castStruct(Struct struct, Schema schema) {
+    if (struct==null) return null;
+    Struct result = new Struct(schema);
+    for (Field field : schema.fields()) {
+      result.put(field, castObject(struct.get(field.name()), field.schema()));
+    }
+    return result;
+  }
+
+  /**
+   * The method rebuilds the array by applying casting of each element
+   * to the target schema value schema.
+   */
+  public static List<Object> castArray(List<?> array, Schema schema) {
+    if (array==null) return null;
+    List<Object> result = new ArrayList<Object>(array.size());
+    for (Object element : array) {
+      result.add(castObject(element, schema.valueSchema()));
+    }
+    return result;
+  }
+
+  /**
+   * The method rebuilds the map by applying casting of each key/value entry
+   * to the target schema key and value schemas.
+   */
+  public static Map<Object, Object> castMap(Map<?, ?> map, Schema schema) {
+    if (map==null) return null;
+    Map<Object, Object> result = new HashMap<Object, Object>();
+    for (Map.Entry<?, ?> entry : map.entrySet()) {
+      result.put(castObject(entry.getKey(), schema.keySchema()), castObject(entry.getValue(), schema.valueSchema()));
+    }
+    return result;
+  }
+
+  /**
+   * Method casts the object to the target schema. It solves the problem
+   * where the {@link Struct#put(Field, Object)} call validates strictly
+   * the submitted content, even if the only difference is that the schema
+   * is marked required or optional. This call executes dispatching to 
+   * the specific object type.
+   * @param object object to be cast
+   * @param schema target schema
+   */
+  public static Object castObject(Object object, Schema schema) {
+    if (object==null) return null;
+    switch (schema.type()) {
+    case STRUCT:
+      return castStruct((Struct)object, schema);
+    case ARRAY:
+      return castArray((List<?>)object, schema);
+    case MAP:
+      return castMap((Map<?,?>)object, schema);
+    default:
+      return object;
+    }
   }
 
   public static <T extends Connectable> T fromStruct(Struct struct, String field, Class<T> aClass) {
