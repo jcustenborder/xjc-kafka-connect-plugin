@@ -435,10 +435,7 @@ public class ConnectableHelper {
     writeXmlG(struct, field, value, new Function<XMLGregorianCalendar, Object>() {
       @Override
       public Object apply(XMLGregorianCalendar xmlGregorianCalendar) {
-        GregorianCalendar calendar = new GregorianCalendar(UTC_TIME_ZONE);
-        calendar.set(Calendar.MONTH, xmlGregorianCalendar.getMonth());
-        calendar.set(Calendar.DAY_OF_MONTH, xmlGregorianCalendar.getDay());
-        return calendar.getTime();
+        return xmlGregorianCalendar.toGregorianCalendar(UTC_TIME_ZONE, null, null).getTime();
       }
     });
   }
@@ -448,10 +445,7 @@ public class ConnectableHelper {
     writeXmlG(struct, field, value, new Function<XMLGregorianCalendar, Object>() {
       @Override
       public Object apply(XMLGregorianCalendar xmlGregorianCalendar) {
-        GregorianCalendar calendar = new GregorianCalendar(UTC_TIME_ZONE);
-        calendar.set(Calendar.YEAR, xmlGregorianCalendar.getYear());
-        calendar.set(Calendar.MONTH, xmlGregorianCalendar.getMonth());
-        return calendar.getTime();
+        return xmlGregorianCalendar.toGregorianCalendar(UTC_TIME_ZONE, null, null).getTime();
       }
     });
   }
@@ -463,7 +457,10 @@ public class ConnectableHelper {
       public void apply(XMLGregorianCalendar xmlGregorianCalendar, Date connectValue) {
         GregorianCalendar calendar = new GregorianCalendar(UTC_TIME_ZONE);
         calendar.setTime(connectValue);
-        xmlGregorianCalendar.setMonth(calendar.get(Calendar.MONTH));
+        xmlGregorianCalendar.clear();
+
+        // XMLGregorianCalendar is 1 based for month - plain GregorianCalendar is 0 based.
+        xmlGregorianCalendar.setMonth(calendar.get(Calendar.MONTH) + 1);
         xmlGregorianCalendar.setDay(calendar.get(Calendar.DAY_OF_MONTH));
       }
     });
@@ -476,7 +473,10 @@ public class ConnectableHelper {
       public void apply(XMLGregorianCalendar xmlGregorianCalendar, Date connectValue) {
         GregorianCalendar calendar = new GregorianCalendar(UTC_TIME_ZONE);
         calendar.setTime(connectValue);
-        xmlGregorianCalendar.setMonth(calendar.get(Calendar.MONTH));
+        xmlGregorianCalendar.clear();
+
+        // XMLGregorianCalendar is 1 based for month - plain GregorianCalendar is 0 based.
+        xmlGregorianCalendar.setMonth(calendar.get(Calendar.MONTH) + 1);
         xmlGregorianCalendar.setYear(calendar.get(Calendar.YEAR));
       }
     });
@@ -615,6 +615,16 @@ public class ConnectableHelper {
     return readXmlG(struct, field, Integer.class, (xmlGregorianCalendar, connectValue) -> {
       xmlGregorianCalendar.setYear(connectValue);
     });
+  }
+
+
+  public static void fromEnum(final Struct struct, final String field, final Enum enumClass) {
+    struct.put(field, enumClass.name());
+  }
+
+
+  public static <T extends Enum> T toEnum(final Struct struct, final String field, final Class<T> enumType) {
+    return (T) Enum.valueOf(enumType, struct.getString(field));
   }
 
 

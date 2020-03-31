@@ -1,0 +1,11 @@
+<urn:books xmlns:urn="urn:enumerations">
+  <!--Zero or more repetitions:-->
+  <book id="string">
+    <review>string</review>
+    <bookType>paperback</bookType>
+  </book>
+  <book id="string">
+    <review>string</review>
+    <bookType>kindle</bookType>
+  </book>
+</urn:books>
