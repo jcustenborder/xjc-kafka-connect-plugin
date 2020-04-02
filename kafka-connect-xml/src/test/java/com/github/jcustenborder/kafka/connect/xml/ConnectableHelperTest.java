@@ -15,13 +15,18 @@
  */
 package com.github.jcustenborder.kafka.connect.xml;
 
+import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -92,6 +97,28 @@ public class ConnectableHelperTest {
       final Integer actual = ConnectableHelper.fromInt32(struct, TEST_FIELD);
       assertEquals(expected, actual);
     }));
+  }
+
+
+  @ParameterizedTest
+  @CsvSource(
+      {
+          "230.00, 230.00, false, 6, HALF_UP",
+          "230.00, 230.000000, true, 6, HALF_UP",
+          "230.5, 231, true, 0, HALF_UP",
+          "230.5, 230, true, 0, FLOOR",
+          "230.5, 231, true, 0, CEILING",
+          // check it handle's nulls
+          ", , true, 0, CEILING",
+          "230.5, 231, true, 0, ",
+      }
+  )
+  public void decimalRoundTrip(BigDecimal in, BigDecimal expected, boolean forceScale, int scale, RoundingMode roundingMode) {
+    Struct struct = struct(Decimal.builder(scale).optional());
+    ConnectableHelper.toDecimal(struct, TEST_FIELD, in, forceScale, scale, roundingMode);
+    BigDecimal actual = ConnectableHelper.fromDecimal(struct, TEST_FIELD);
+
+    assertEquals(expected, actual);
   }
 
   @TestFactory
