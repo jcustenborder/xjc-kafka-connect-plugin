@@ -30,6 +30,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -235,9 +236,10 @@ public class ConnectableHelper {
     struct.put(field, result);
   }
 
-  public static void toDecimal(Struct struct, String field, BigDecimal value) {
+  public static void toDecimal(Struct struct, String field, BigDecimal value, int scale, RoundingMode roundingMode) {
     log.trace("toString() - field = '{}' value = '{}'", field, value);
-    struct.put(field, value);
+
+    struct.put(field, value.setScale(scale, roundingMode));
   }
 
   public static void toXmlgDay(Struct struct, String field, XMLGregorianCalendar value) {
