@@ -16,6 +16,7 @@
 package com.github.jcustenborder.kafka.connect.xml;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.sun.codemodel.ClassType;
 import com.sun.codemodel.JBlock;
@@ -33,6 +34,7 @@ import com.sun.codemodel.JVar;
 import com.sun.tools.xjc.Options;
 import com.sun.tools.xjc.outline.ClassOutline;
 import com.sun.tools.xjc.outline.Outline;
+import org.apache.commons.lang3.Validate;
 import org.jvnet.jaxb2_commons.plugin.AbstractParameterizablePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,12 +46,15 @@ import javax.xml.datatype.Duration;
 import javax.xml.namespace.QName;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.sun.codemodel.JType.parse;
+import static java.util.Collections.emptyList;
+
 
 public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
   static final String TO_CONNECT_STRUCT = "toStruct";
@@ -58,6 +63,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
   static final Class<?> CLASS_JREFERENCEDCLASS;
   private static final Logger log = LoggerFactory.getLogger(KafkaConnectPlugin.class);
   private static final String CONNECT_SCHEMA_FIELD = "CONNECT_SCHEMA";
+  private final KafkaConnectPluginConfig config;
 
   static {
     try {
@@ -68,10 +74,18 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     }
   }
 
-  Types types;
-  Map<JType, StaticTypeState> jTypeLookup;
-  Map<String, XmlTypeState> xmlTypeLookup;
-  Map<JType, DefinedTypeState> definedTypeStateLookup = new HashMap<>();
+  private Types types;
+  private Map<JType, StaticTypeState> jTypeLookup;
+  private Map<String, XmlTypeState> xmlTypeLookup;
+  private Map<JType, DefinedTypeState> definedTypeStateLookup = new HashMap<>();
+
+  public KafkaConnectPlugin() {
+    this(null);
+  }
+
+  public KafkaConnectPlugin(KafkaConnectPluginConfig config) {
+    this.config = config == null ? new KafkaConnectPluginConfig.Builder().build(): config;
+  }
 
   @Override
   public String getOptionName() {
@@ -117,7 +131,14 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     return schemaVariable;
   }
 
-  void add(Map<JType, StaticTypeState> result, JExpression schemaBuilder, JExpression schema, String readMethod, String writeMethod, JCodeModel codeModel, Class<?>... classes) {
+
+  void add(Map<JType, StaticTypeState> result, JExpression schemaBuilder, JExpression schema, String readMethod, String writeMethod,
+          JCodeModel codeModel, Class<?>... classes) {
+    add(result, schemaBuilder, schema, new MethodDescriptor(readMethod, emptyList()), new MethodDescriptor(writeMethod, emptyList()), codeModel, classes);
+  }
+
+
+  void add(Map<JType, StaticTypeState> result, JExpression schemaBuilder, JExpression schema, MethodDescriptor readMethod, MethodDescriptor writeMethod, JCodeModel codeModel, Class<?>... classes) {
     ImmutableStaticTypeState.Builder builder = ImmutableStaticTypeState.builder();
 
     for (Class<?> cls : classes) {
@@ -129,8 +150,10 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
       }
       builder.addTypes(type);
     }
-    builder.readMethod(readMethod);
-    builder.writeMethod(writeMethod);
+    builder.readMethod(readMethod.getMethodName());
+    builder.readMethodArgs(readMethod.getMethodArgs());
+    builder.writeMethod(writeMethod.getMethodName());
+    builder.writeMethodArgs(writeMethod.getMethodArgs());
     builder.schema(schema);
     builder.schemaBuilder(schemaBuilder);
     StaticTypeState typeState = builder.build();
@@ -152,7 +175,13 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("INT64_SCHEMA"), "toInt64", "fromInt64BigInteger", codeModel, BigInteger.class);
     add(result, this.types.schemaBuilder().staticInvoke("bytes"), this.types.schema().staticRef("BYTES_SCHEMA"), "toBytes", "fromBytes", codeModel, byte[].class);
     add(result, this.types.schemaBuilder().staticInvoke("string"), this.types.schema().staticRef("STRING_SCHEMA"), "toString", "fromString", codeModel, String.class);
-    add(result, this.types.decimal().staticInvoke("builder").arg(JExpr.lit(12)), null, "toDecimal", "fromDecimal", codeModel, BigDecimal.class);
+    add(result, this.types.decimal().staticInvoke("builder").arg(JExpr.lit(config.getDecimalScale())), null,
+        new MethodDescriptor("toDecimal", ImmutableList.of(
+            JExpr.lit(config.isForceDecimalScale()),
+            JExpr.lit(config.getDecimalScale()),
+            codeModel.ref(RoundingMode.class).staticInvoke("valueOf").arg(JExpr.lit(config.getRoundingMode().name())))),
+        new MethodDescriptor("fromDecimal", emptyList()),
+        codeModel, BigDecimal.class);
 
     add(result, this.types.connectableHelper().staticInvoke("qnameBuilder"), null, "toQname", "fromQname", codeModel, QName.class);
     add(result, this.types.schemaBuilder().staticInvoke("int64"), this.types.schema().staticRef("IN64_SCHEMA"), "toDuration", "fromDuration", codeModel, Duration.class);
@@ -466,7 +495,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
 
   @Override
   public boolean run(Outline model, Options options, ErrorHandler errorHandler) throws
-      SAXException {
+          SAXException {
     try {
       JCodeModel codeModel = model.getCodeModel();
       setupImportedClasses(codeModel);
@@ -489,4 +518,26 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
   }
 
 
+  private static class MethodDescriptor {
+    private final String methodName;
+    private final List<JExpression> methodArgs;
+
+
+    private MethodDescriptor(final String methodName, final List<JExpression> methodArgs) {
+      Validate.notNull(methodName, "methodName must not be null.");
+
+      this.methodName = methodName;
+      this.methodArgs = methodArgs == null ? emptyList(): methodArgs;
+    }
+
+
+    public String getMethodName() {
+      return methodName;
+    }
+
+
+    public List<JExpression> getMethodArgs() {
+      return methodArgs;
+    }
+  }
 }
