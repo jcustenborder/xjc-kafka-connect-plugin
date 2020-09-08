@@ -23,10 +23,10 @@
     <parent>
         <groupId>com.github.jcustenborder.kafka.connect</groupId>
         <artifactId>kafka-connect-xml-parent</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>0.2-SNAPSHOT</version>
     </parent>
     <artifactId>xjc-kafka-connect-plugin</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <name>xjc-kafka-connect-plugin</name>
     <url>https://github.com/jcustenborder/xjc-kafka-connect-plugin</url>
     <inceptionYear>2017</inceptionYear>
