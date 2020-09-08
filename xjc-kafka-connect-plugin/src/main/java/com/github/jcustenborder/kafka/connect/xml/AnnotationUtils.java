@@ -38,8 +38,7 @@ class AnnotationUtils {
 
 
   public static Map<String, Object> xmlSchemaType(JCodeModel codeModel, JFieldVar field) {
-    final Map<String, Object> result = annotationAttributes(codeModel, field, XmlSchemaType.class);
-    return result;
+    return annotationAttributes(codeModel, field, XmlSchemaType.class);
   }
 
   public static Map<String, Object> xmlAttribute(JCodeModel codeModel, JFieldVar field) {
@@ -152,7 +151,7 @@ class AnnotationUtils {
               value = Boolean.parseBoolean(stringValue);
             } else if (String.class.equals(method.getReturnType()) || Class.class.equals(method.getReturnType())) {
               value = stringValue.replaceAll("^\\\"(.*)\\\"$", "$1");
-              if (value == "\u0000") {
+              if ("\u0000".equals(value)) {
                 continue;
               }
             } else if (long.class.equals(method.getReturnType())) {
@@ -191,7 +190,7 @@ class AnnotationUtils {
           final StringWriter writer = new StringWriter();
           final JFormatter formatter = new JFormatter(writer);
           annotationValue.generate(formatter);
-          log.trace("attributes() - memberName = '{}' value = '{}'", memberName, writer.toString());
+          log.trace("attributes() - memberName = '{}' value = '{}'", memberName, writer);
           result.put(kvp.getKey(), writer.toString());
         }
       }

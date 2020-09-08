@@ -33,6 +33,7 @@ import com.sun.codemodel.JVar;
 import com.sun.tools.xjc.Options;
 import com.sun.tools.xjc.outline.ClassOutline;
 import com.sun.tools.xjc.outline.Outline;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.jvnet.jaxb2_commons.plugin.AbstractParameterizablePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,7 @@ import java.util.Map;
 
 import static com.sun.codemodel.JType.parse;
 
+@SuppressFBWarnings
 public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
   static final String TO_CONNECT_STRUCT = "toStruct";
   static final String FROM_CONNECT_STRUCT = "fromStruct";
@@ -255,115 +257,132 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     }
   }
 
-  State type(JCodeModel codeModel, ClassOutline classOutline, JFieldVar field, JType type) {
 
+  @SuppressFBWarnings
+  State type(JCodeModel codeModel, ClassOutline classOutline, JFieldVar field, JType type) {
+    log.trace("type() - type = '{}'", type);
     if (this.types.blackListTypes().contains(type)) {
       throw new TypeTooGenericException(classOutline, field, null, type);
     }
 
+    State result = this.jTypeLookup.get(type);
 
-    State jTypeState = this.jTypeLookup.get(type);
-
-    if (null != jTypeState) {
-      return jTypeState;
+    if (null != result) {
+      return result;
     }
 
+    log.trace("type() - Generating state for {}", type);
+
     if (type instanceof JDefinedClass) {
-      return this.definedTypeStateLookup.computeIfAbsent(type, jType -> {
-        JDefinedClass jDefinedClass = (JDefinedClass) type;
-        ImmutableDefinedTypeState.Builder builder = ImmutableDefinedTypeState.builder();
-        if (targetsEnum(jDefinedClass)) {
-          builder.schemaBuilder(this.types.schemaBuilder().staticInvoke("string"));
-          builder.readMethod("fromEnum");
-          builder.writeMethod("toEnum");
-          builder.addWriteMethodArgs(jDefinedClass.dotclass());
-        } else {
-          builder.schemaBuilder(jDefinedClass.staticRef(CONNECT_SCHEMA_FIELD));
-          builder.readMethod("toStruct");
-          builder.writeMethod("fromStruct");
-          builder.addWriteMethodArgs(jDefinedClass.dotclass());
-          builder.schema(jDefinedClass.staticRef(CONNECT_SCHEMA_FIELD));
-        }
-        builder.type(type);
-        return builder.build();
-      });
+      DefinedTypeState dtResult = this.definedTypeStateLookup.get(type);
+      if (null != dtResult) {
+        return dtResult;
+      }
+      JDefinedClass jDefinedClass = (JDefinedClass) type;
+      ImmutableDefinedTypeState.Builder builder = ImmutableDefinedTypeState.builder();
+      if (targetsEnum(jDefinedClass)) {
+        builder.schemaBuilder(this.types.schemaBuilder().staticInvoke("string"));
+        builder.readMethod("fromEnum");
+        builder.writeMethod("toEnum");
+        builder.addWriteMethodArgs(jDefinedClass.dotclass());
+      } else {
+        builder.schemaBuilder(jDefinedClass.staticRef(CONNECT_SCHEMA_FIELD));
+        builder.readMethod("toStruct");
+        builder.writeMethod("fromStruct");
+        builder.addWriteMethodArgs(jDefinedClass.dotclass());
+        builder.schema(jDefinedClass.staticRef(CONNECT_SCHEMA_FIELD));
+      }
+      builder.type(type);
+      dtResult = builder.build();
+      this.definedTypeStateLookup.put(type, dtResult);
+      return dtResult;
     }
 
     if (CLASS_JNARROWED.equals(type.getClass())) {
-      return this.definedTypeStateLookup.computeIfAbsent(type, jType -> {
-        final JClass jClass = (JClass) field.type();
-        final JClass basis;
-        final List<JClass> args;
-        try {
-          Class<?> jnarrowedCls = Class.forName("com.sun.codemodel.JNarrowedClass");
-          java.lang.reflect.Field basisField = jnarrowedCls.getDeclaredField("basis");
-          basisField.setAccessible(true);
-          java.lang.reflect.Field argsField = jnarrowedCls.getDeclaredField("args");
-          argsField.setAccessible(true);
-          basis = (JClass) basisField.get(jClass);
-          args = (List<JClass>) argsField.get(jClass);
-        } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
-          throw new IllegalStateException(e);
+      DefinedTypeState dtResult = this.definedTypeStateLookup.get(type);
+      if (null != dtResult) {
+        return dtResult;
+      }
+      log.trace("type() - type is CLASS_JNARROWED. type = '{}'", type);
+
+      final JClass jClass = (JClass) field.type();
+      final JClass basis;
+      final List<JClass> args;
+      try {
+        Class<?> jnarrowedCls = Class.forName("com.sun.codemodel.JNarrowedClass");
+        java.lang.reflect.Field basisField = jnarrowedCls.getDeclaredField("basis");
+        basisField.setAccessible(true);
+        java.lang.reflect.Field argsField = jnarrowedCls.getDeclaredField("args");
+        argsField.setAccessible(true);
+        basis = (JClass) basisField.get(jClass);
+        args = (List<JClass>) argsField.get(jClass);
+      } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+        throw new IllegalStateException(e);
+      }
+
+      ImmutableDefinedTypeState.Builder builder = ImmutableDefinedTypeState.builder()
+          .type(type);
+
+      if (this.types.qNameMap().equals(jClass)) {
+        // This case pops up when anyattribute is in use.
+        JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("map")
+            .arg(this.types.connectableHelper().staticRef("QNAME_SCHEMA"))
+            .arg(this.types.schema().staticRef("OPTIONAL_STRING_SCHEMA"));
+        builder.schemaBuilder(schemaBuilder);
+        builder.readMethod("toQNameMap");
+        builder.writeMethod("fromQNameMap");
+        dtResult = builder.build();
+        this.definedTypeStateLookup.put(type, dtResult);
+      } else if (this.types.list().equals(basis)) {
+        JClass valueType = args.get(0);
+        State valueState = type(codeModel, classOutline, field, valueType);
+
+        JExpression valueSchema = valueState.schema();
+        if (valueSchema == null) {
+          valueSchema = valueState.schemaBuilder().invoke("build");
         }
+        JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("array")
+            .arg(valueSchema);
+        builder.schemaBuilder(schemaBuilder);
+        builder.readMethod("toArray");
+        builder.writeMethod("fromArray");
+        builder.addWriteMethodArgs(valueType.dotclass());
 
-        ImmutableDefinedTypeState.Builder builder = ImmutableDefinedTypeState.builder()
-            .type(type);
 
-        if (this.types.qNameMap().equals(jClass)) {
-          // This case pops up when anyattribute is in use.
-          JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("map")
-              .arg(this.types.connectableHelper().staticRef("QNAME_SCHEMA"))
-              .arg(this.types.schema().staticRef("OPTIONAL_STRING_SCHEMA"));
-          builder.schemaBuilder(schemaBuilder);
-          builder.readMethod("toQNameMap");
-          builder.writeMethod("fromQNameMap");
-          return builder.build();
-        } else if (this.types.list().equals(basis)) {
-          JClass valueType = args.get(0);
-          State valueState = type(codeModel, classOutline, field, valueType);
-
-          JExpression valueSchema = valueState.schema();
-          if (valueSchema==null) {
-        	  valueSchema = valueState.schemaBuilder().invoke("build");
-          }
-          JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("array")
-              .arg(valueSchema);
-          builder.schemaBuilder(schemaBuilder);
-          builder.readMethod("toArray");
-          builder.writeMethod("fromArray");
-          builder.addWriteMethodArgs(valueType.dotclass());
-          return builder.build();
-        } else if (this.types.map().equals(basis)) {
-          JClass keyType = args.get(0);
-          State keyState = type(codeModel, classOutline, field, keyType);
-          JExpression keySchema = keyState.schema();
-          if (keySchema==null) {
-        	  keySchema = keyState.schemaBuilder().invoke("build");
-          }
-          JClass valueType = args.get(1);
-          State valueState = type(codeModel, classOutline, field, valueType);
-          JExpression valueSchema = valueState.schema();
-          if (valueSchema==null) {
-        	  valueSchema = valueState.schemaBuilder().invoke("build");
-          }
-          JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("map")
-              .arg(keySchema)
-              .arg(valueSchema);
-          builder.schemaBuilder(schemaBuilder);
-          builder.readMethod("toMap");
-          builder.writeMethod("fromMap");
-          builder.addWriteMethodArgs(keyType.dotclass());
-          builder.addWriteMethodArgs(valueType.dotclass());
-          return builder.build();
-        } else {
-          throw new UnsupportedTypeException(
-              classOutline,
-              field,
-              field.type(),
-              basis
-          );
+        dtResult = builder.build();
+        this.definedTypeStateLookup.put(type, dtResult);
+      } else if (this.types.map().equals(basis)) {
+        JClass keyType = args.get(0);
+        State keyState = type(codeModel, classOutline, field, keyType);
+        JExpression keySchema = keyState.schema();
+        if (keySchema == null) {
+          keySchema = keyState.schemaBuilder().invoke("build");
         }
-      });
+        JClass valueType = args.get(1);
+        State valueState = type(codeModel, classOutline, field, valueType);
+        JExpression valueSchema = valueState.schema();
+        if (valueSchema == null) {
+          valueSchema = valueState.schemaBuilder().invoke("build");
+        }
+        JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("map")
+            .arg(keySchema)
+            .arg(valueSchema);
+        builder.schemaBuilder(schemaBuilder);
+        builder.readMethod("toMap");
+        builder.writeMethod("fromMap");
+        builder.addWriteMethodArgs(keyType.dotclass());
+        builder.addWriteMethodArgs(valueType.dotclass());
+        dtResult = builder.build();
+        this.definedTypeStateLookup.put(type, dtResult);
+      } else {
+        throw new UnsupportedTypeException(
+            classOutline,
+            field,
+            field.type(),
+            basis
+        );
+      }
+      return dtResult;
     }
 
 
@@ -427,7 +446,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
   }
 
   private boolean targetsEnum(JDefinedClass cls) {
-      return ClassType.ENUM == cls.getClassType();
+    return ClassType.ENUM == cls.getClassType();
   }
 
   private boolean targetsEnum(JFieldVar field) {
@@ -463,6 +482,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     fields(codeModel, classOutline, result);
     return result;
   }
+
 
   @Override
   public boolean run(Outline model, Options options, ErrorHandler errorHandler) throws

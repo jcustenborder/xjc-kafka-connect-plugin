@@ -18,6 +18,7 @@ package com.github.jcustenborder.kafka.connect.xml;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JType;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.immutables.value.Value;
 
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Value.Immutable
+@SuppressFBWarnings
 interface Types {
   static Types build(JCodeModel codeModel) {
     JClass mapClass = codeModel.ref(Map.class);

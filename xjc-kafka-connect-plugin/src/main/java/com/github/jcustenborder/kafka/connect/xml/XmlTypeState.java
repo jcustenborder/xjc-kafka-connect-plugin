@@ -15,11 +15,13 @@
  */
 package com.github.jcustenborder.kafka.connect.xml;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.immutables.value.Value;
 
 import java.util.List;
 
 @Value.Immutable
+@SuppressFBWarnings
 interface XmlTypeState extends State {
   /**
    * Xml Types

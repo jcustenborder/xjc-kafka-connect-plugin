@@ -16,11 +16,13 @@
 package com.github.jcustenborder.kafka.connect.xml;
 
 import com.sun.codemodel.JType;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.immutables.value.Value;
 
 import java.util.List;
 
 @Value.Immutable
+@SuppressFBWarnings
 interface StaticTypeState extends State {
   List<JType> types();
 }
