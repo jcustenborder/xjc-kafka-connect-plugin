@@ -16,9 +16,11 @@
 package com.github.jcustenborder.kafka.connect.xml;
 
 import com.sun.codemodel.JType;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.immutables.value.Value;
 
 @Value.Immutable
+@SuppressFBWarnings
 interface DefinedTypeState extends State {
   JType type();
 }

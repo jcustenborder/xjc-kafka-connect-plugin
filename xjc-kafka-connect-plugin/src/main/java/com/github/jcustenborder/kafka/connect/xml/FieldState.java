@@ -17,11 +17,13 @@ package com.github.jcustenborder.kafka.connect.xml;
 
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JFieldVar;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.immutables.value.Value;
 
 import java.util.List;
 
 @Value.Immutable
+@SuppressFBWarnings
 interface FieldState extends State {
   /**
    * Name of the field in the xml document.
