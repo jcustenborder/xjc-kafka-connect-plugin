@@ -23,7 +23,7 @@
     <parent>
         <groupId>com.github.jcustenborder</groupId>
         <artifactId>maven-central-parent</artifactId>
-        <version>1.0.0.0</version>
+        <version>1.0.0</version>
     </parent>
     <groupId>com.github.jcustenborder.kafka.connect</groupId>
     <artifactId>kafka-connect-xml-parent</artifactId>
