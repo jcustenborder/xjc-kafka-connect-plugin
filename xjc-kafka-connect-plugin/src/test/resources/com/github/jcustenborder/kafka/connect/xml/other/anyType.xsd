@@ -1,0 +1,54 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="urn:simpleTypes"
+            xmlns:bks="urn:simpleTypes">
+
+    <xsd:element name="simpleTypes" type="bks:simpleTypes"/>
+
+    <xsd:complexType name="simpleTypes">
+        <xsd:sequence>
+            <!--<xsd:element name="test_anySimpleType" type="xsd:anySimpleType"/>-->
+            <xsd:element name="test_anyURI" type="xsd:anyURI"/>
+            <xsd:element name="test_base64Binary" type="xsd:base64Binary"/>
+            <xsd:element name="test_boolean" type="xsd:boolean"/>
+            <xsd:element name="test_byte" type="xsd:byte"/>
+            <xsd:element name="test_date" type="xsd:date"/>
+            <xsd:element name="test_dateTime" type="xsd:dateTime"/>
+            <xsd:element name="test_decimal" type="xsd:decimal"/>
+            <xsd:element name="test_double" type="xsd:double"/>
+            <xsd:element name="test_duration" type="xsd:duration"/>
+            <!--<xsd:element name="test_ENTITIES" type="xsd:ENTITIES"/>-->
+            <xsd:element name="test_ENTITY" type="xsd:ENTITY"/>
+            <xsd:element name="test_float" type="xsd:float"/>
+            <xsd:element name="test_gDay" type="xsd:gDay"/>
+            <xsd:element name="test_gMonth" type="xsd:gMonth"/>
+            <xsd:element name="test_gMonthDay" type="xsd:gMonthDay"/>
+            <xsd:element name="test_gYear" type="xsd:gYear"/>
+            <xsd:element name="test_gYearMonth" type="xsd:gYearMonth"/>
+            <xsd:element name="test_hexBinary" type="xsd:hexBinary"/>
+            <xsd:element name="test_ID" type="xsd:ID"/>
+            <xsd:element name="test_int" type="xsd:int"/>
+            <xsd:element name="test_integer" type="xsd:integer"/>
+            <xsd:element name="test_language" type="xsd:language"/>
+            <xsd:element name="test_long" type="xsd:long"/>
+            <xsd:element name="test_Name" type="xsd:Name"/>
+            <xsd:element name="test_NCName" type="xsd:NCName"/>
+            <xsd:element name="test_negativeInteger" type="xsd:negativeInteger"/>
+            <!--<xsd:element name="test_NMTOKEN" type="xsd:NMTOKEN"/>-->
+            <!--<xsd:element name="test_NMTOKENS" type="xsd:NMTOKENS"/>-->
+            <xsd:element name="test_nonNegativeInteger" type="xsd:nonNegativeInteger"/>
+            <xsd:element name="test_nonPositiveInteger" type="xsd:nonPositiveInteger"/>
+            <xsd:element name="test_normalizedString" type="xsd:normalizedString"/>
+            <xsd:element name="test_positiveInteger" type="xsd:positiveInteger"/>
+            <xsd:element name="test_QName" type="xsd:QName"/>
+            <xsd:element name="test_short" type="xsd:short"/>
+            <xsd:element name="test_string" type="xsd:string"/>
+            <xsd:element name="test_time" type="xsd:time"/>
+            <xsd:element name="test_token" type="xsd:token"/>
+            <xsd:element name="test_unsignedByte" type="xsd:unsignedByte"/>
+            <xsd:element name="test_unsignedInt" type="xsd:unsignedInt"/>
+            <xsd:element name="test_unsignedLong" type="xsd:unsignedLong"/>
+            <xsd:element name="test_unsignedShort" type="xsd:unsignedShort"/>
+            <xsd:element name="test_any" type="xsd:anyType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>

@@ -15,24 +15,42 @@
  */
 package com.github.jcustenborder.kafka.connect.xml;
 
-import com.google.common.base.Joiner;
 import com.google.common.io.PatternFilenameFilter;
+import com.sun.codemodel.ClassType;
+import com.sun.codemodel.CodeWriter;
+import com.sun.codemodel.JAnnotationUse;
+import com.sun.codemodel.JClass;
+import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JFieldVar;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JPackage;
+import com.sun.codemodel.writer.SingleStreamCodeWriter;
 import com.sun.tools.xjc.Options;
 import com.sun.tools.xjc.Plugin;
 import com.sun.tools.xjc.api.S2JJAXBModel;
 import com.sun.tools.xjc.api.SchemaCompiler;
 import com.sun.tools.xjc.api.XJC;
+import com.sun.tools.xjc.outline.ClassOutline;
+import com.sun.tools.xjc.outline.Outline;
 import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -47,7 +65,8 @@ public class KafkaConnectPluginTest {
   private final File outputDirectoryRoot = new File("target/connect-plugin");
   private final File inputDirectory = new File("src/test/resources/com/github/jcustenborder/kafka/connect/xml");
 
-  static void compile(InputSource is, File outputDirectory, Plugin... plugins) throws IOException {
+
+  static void compile(InputSource is, File outputDirectory, Plugin plugin, File... bindingFiles) throws IOException {
     if (!outputDirectory.isDirectory()) {
       assertTrue(
           outputDirectory.mkdirs(),
@@ -57,48 +76,109 @@ public class KafkaConnectPluginTest {
     System.setProperty("javax.xml.accessExternalSchema", "all");
     SchemaCompiler sc = XJC.createSchemaCompiler();
     Options options = sc.getOptions();
-    if (plugins.length > 0) {
-      log.info("compile() - adding activePlugins {}",
-          Joiner.on(", ").join(
-              Arrays.stream(plugins)
-                  .map(plugin -> plugin.getClass().getSimpleName())
-                  .collect(Collectors.toList())
-          )
-      );
-      options.activePlugins.addAll(Arrays.asList(plugins));
+    if (null != plugin) {
+      log.info("compile() - adding activePlugins {}", plugin);
+      options.activePlugins.addAll(Arrays.asList(plugin));
     }
-
+    for (File bindingFile : bindingFiles) {
+      options.addBindFile(bindingFile);
+    }
+    options.automaticNameConflictResolution = true;
     sc.forcePackageName("com.xyz.schema");
     sc.parseSchema(is);
     ConnectErrorListener errorListener = new ConnectErrorListener();
     sc.setErrorListener(errorListener);
+    log.info("compile() - Binding model for {}", is);
     S2JJAXBModel model = sc.bind();
     assertFalse(errorListener.hasExceptions(), "There should be no exceptions.");
     assertNotNull(model, "model could not be generated.");
 
     log.info("compile() - Generating code to {}", outputDirectory);
-    JCodeModel jCodeModel = model.generateCode(null, null);
+    JCodeModel jCodeModel = model.generateCode(null, errorListener);
     jCodeModel.build(outputDirectory);
   }
 
-  void test(File schemaFile) throws IOException {
+  void test(File schemaFile, boolean ignoreAnyType) throws IOException {
     InputSource is = new InputSource(schemaFile.toURI().toString());
     File outputDirectory = new File(outputDirectoryRoot, schemaFile.getName());
-    test(is, outputDirectory);
+    test(is, outputDirectory, ignoreAnyType);
   }
 
-  void test(InputSource is, File outputDirectory) throws IOException {
+
+  void test(InputSource is, File outputDirectory, boolean ignoreAnyType, File... bindingFiles) throws IOException {
     File beforeDirectory = new File(outputDirectory, "before");
-    compile(is, beforeDirectory);
+    compile(is, beforeDirectory, null, bindingFiles);
     File afterDirectory = new File(outputDirectory, "after");
-    compile(is, afterDirectory, new KafkaConnectPlugin());
+    KafkaConnectPlugin plugin = new KafkaConnectPlugin();
+    plugin.setIgnoreAnyTypeFields(ignoreAnyType);
+    compile(is, afterDirectory, plugin, bindingFiles);
+  }
+
+  @Test
+  public void ignoreAnyType() throws IOException {
+    File input = new File("src/test/resources/com/github/jcustenborder/kafka/connect/xml/other/anyType.xsd");
+    test(input, true);
+  }
+
+  @Test
+  public void DATEXIISchema_1_0_1_0() throws IOException {
+    File outputDirectory = new File(this.outputDirectoryRoot, "DATEXIISchema_1_0_1_0.xsd");
+    InputSource is = new InputSource("https://datex2.eu/schema/1_0/1_0/DATEXIISchema_1_0_1_0.xsd");
+    File bindingFile = new File("src/test/resources/com/github/jcustenborder/kafka/connect/xml/DATEXIISchema_1_0_1_0.xjb");
+    test(is, outputDirectory, true, bindingFile);
   }
 
   @TestFactory
   public Stream<DynamicTest> build() throws IOException {
-    return Arrays.stream(inputDirectory.listFiles(new PatternFilenameFilter("^.+\\.xsd$")))
-        .map(schemaFile -> dynamicTest(schemaFile.getName(), () -> {
-          test(schemaFile);
+    File[] inputFiles = Objects.requireNonNull(inputDirectory.listFiles(new PatternFilenameFilter("^.+\\.xsd$")));
+
+    return Arrays.stream(inputFiles)
+        .map(file -> dynamicTest(file.getName(), () -> {
+          test(file, false);
         }));
   }
+
+
+  @Test
+  public void foo() throws JClassAlreadyExistsException, IOException {
+//    @XmlSchemaType(name = "string")
+//    protected List<VehicleTypeEnum> vehicleType;
+
+    JCodeModel codeModel = new JCodeModel();
+    JClass listClass = codeModel.ref(List.class);
+    JPackage codePackage = codeModel._package("example");
+
+    JDefinedClass enumType = codePackage._enum("VehicleTypeEnum");
+    enumType.annotate(XmlEnum.class);
+    enumType.annotate(XmlType.class).param("name", "VehicleTypeEnum");
+    enumType.enumConstant("ONE");
+    JClass listOfVehicleTypeEnum = listClass.narrow(enumType);
+
+    JDefinedClass definedClass = codePackage._class("TestClass");
+    JFieldVar definedField = definedClass.field(JMod.PROTECTED, listOfVehicleTypeEnum, "vehicleType");
+    JAnnotationUse fieldAnnotation = definedField.annotate(XmlSchemaType.class);
+    fieldAnnotation.param("name", "string");
+
+    String code;
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+      CodeWriter writer = new SingleStreamCodeWriter(outputStream);
+      codeModel.build(writer);
+      code = new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
+    }
+    log.info("code:\n{}", code);
+
+
+    KafkaConnectPlugin plugin = new KafkaConnectPlugin();
+//    plugin.
+//    ClassOutline classOutline = codeModel.getClasses()
+
+
+
+//    ClassOutline classOutline = new
+//    plugin.field()
+
+
+  }
+
+
 }

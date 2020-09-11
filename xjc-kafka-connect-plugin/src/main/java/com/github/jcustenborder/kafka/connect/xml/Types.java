@@ -52,6 +52,7 @@ interface Types {
         .connectable(codeModel.ref("com.github.jcustenborder.kafka.connect.xml.Connectable"))
         .bigInteger(codeModel.ref(BigInteger.class))
         .bigDecimal(codeModel.ref(BigDecimal.class))
+        .object(codeModel.ref(Object.class))
         .map(mapClass)
         .qName(qNameClass)
         .qNameMap(qNameMapClass)
@@ -62,6 +63,8 @@ interface Types {
         .addBlackListTypes(codeModel.ref(Serializable.class))
         .build();
   }
+
+  JClass object();
 
   JClass struct();
 

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,10 +31,10 @@ import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 import com.sun.tools.xjc.Options;
+import com.sun.tools.xjc.Plugin;
 import com.sun.tools.xjc.outline.ClassOutline;
 import com.sun.tools.xjc.outline.Outline;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.jvnet.jaxb2_commons.plugin.AbstractParameterizablePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ErrorHandler;
@@ -53,27 +53,40 @@ import java.util.Map;
 import static com.sun.codemodel.JType.parse;
 
 @SuppressFBWarnings
-public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
+public class KafkaConnectPlugin extends Plugin {
   static final String TO_CONNECT_STRUCT = "toStruct";
   static final String FROM_CONNECT_STRUCT = "fromStruct";
   static final Class<?> CLASS_JNARROWED;
   static final Class<?> CLASS_JREFERENCEDCLASS;
   private static final Logger log = LoggerFactory.getLogger(KafkaConnectPlugin.class);
   private static final String CONNECT_SCHEMA_FIELD = "CONNECT_SCHEMA";
+  private static final Class<?> JNARROWED_CLS;
+  private static final java.lang.reflect.Field BASIS_FIELD;
+  private static final java.lang.reflect.Field ARGS_FIELD;
+  private Types types;
+  private Map<JType, StaticTypeState> jTypeLookup;
+  private Map<String, XmlTypeState> xmlTypeLookup;
+  private Map<JType, DefinedTypeState> definedTypeStateLookup = new HashMap<>();
+  private boolean ignoreAnyTypeFields;
 
   static {
     try {
       CLASS_JNARROWED = Class.forName("com.sun.codemodel.JNarrowedClass");
       CLASS_JREFERENCEDCLASS = Class.forName("com.sun.codemodel.JCodeModel$JReferencedClass");
-    } catch (ClassNotFoundException e) {
+      JNARROWED_CLS = Class.forName("com.sun.codemodel.JNarrowedClass");
+      BASIS_FIELD = JNARROWED_CLS.getDeclaredField("basis");
+      BASIS_FIELD.setAccessible(true);
+      ARGS_FIELD = JNARROWED_CLS.getDeclaredField("args");
+      ARGS_FIELD.setAccessible(true);
+    } catch (ClassNotFoundException | NoSuchFieldException e) {
       throw new IllegalStateException(e);
     }
   }
 
-  Types types;
-  Map<JType, StaticTypeState> jTypeLookup;
-  Map<String, XmlTypeState> xmlTypeLookup;
-  Map<JType, DefinedTypeState> definedTypeStateLookup = new HashMap<>();
+
+  public void setIgnoreAnyTypeFields(boolean ignoreAnyTypeFields) {
+    this.ignoreAnyTypeFields = ignoreAnyTypeFields;
+  }
 
   @Override
   public String getOptionName() {
@@ -85,7 +98,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     return "TBD";
   }
 
-  JFieldVar processSchema(JCodeModel codeModel, ClassOutline classOutline, List<FieldState> fieldStates) {
+  private JFieldVar processSchema(ClassOutline classOutline, List<FieldState> fieldStates) {
     final JFieldVar schemaVariable = classOutline.implClass.field(JMod.PUBLIC | JMod.STATIC | JMod.FINAL, this.types.schema(), CONNECT_SCHEMA_FIELD);
 
     final JBlock constructorBlock = classOutline.implClass.init();
@@ -119,7 +132,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     return schemaVariable;
   }
 
-  void add(Map<JType, StaticTypeState> result, JExpression schemaBuilder, JExpression schema, String readMethod, String writeMethod, JCodeModel codeModel, Class<?>... classes) {
+  private void add(Map<JType, StaticTypeState> result, JExpression schemaBuilder, JExpression schema, String readMethod, String writeMethod, JCodeModel codeModel, Class<?>... classes) {
     ImmutableStaticTypeState.Builder builder = ImmutableStaticTypeState.builder();
 
     for (Class<?> cls : classes) {
@@ -141,7 +154,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     }
   }
 
-  Map<JType, StaticTypeState> buildTypeLookup(JCodeModel codeModel) {
+  private Map<JType, StaticTypeState> buildTypeLookup(JCodeModel codeModel) {
     Map<JType, StaticTypeState> result = new HashMap<>();
 
     add(result, this.types.schemaBuilder().staticInvoke("bool"), this.types.schema().staticRef("BOOLEAN_SCHEMA"), "toBoolean", "fromBoolean", codeModel, boolean.class, Boolean.class);
@@ -162,7 +175,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     return ImmutableMap.copyOf(result);
   }
 
-  void add(Map<String, XmlTypeState> result, JExpression schemaBuilder, JExpression schema, String readMethod, String writeMethod, String... xmlTypes) {
+  private void add(Map<String, XmlTypeState> result, JExpression schemaBuilder, JExpression schema, String readMethod, String writeMethod, String... xmlTypes) {
     com.github.jcustenborder.kafka.connect.xml.ImmutableXmlTypeState.Builder builder = com.github.jcustenborder.kafka.connect.xml.ImmutableXmlTypeState.builder();
     builder.addXmlTypes(xmlTypes);
     builder.schema(schema);
@@ -175,7 +188,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     }
   }
 
-  Map<String, XmlTypeState> buildXmlTypeLookup() {
+  private Map<String, XmlTypeState> buildXmlTypeLookup() {
     Map<String, XmlTypeState> result = new HashMap<>();
     add(result, this.types.date().staticInvoke("builder"), this.types.date().staticRef("SCHEMA"), "toDate", "fromDate", "date");
     add(result, this.types.time().staticInvoke("builder"), this.types.time().staticRef("SCHEMA"), "toTime", "fromTime", "time");
@@ -190,7 +203,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     );
     add(result, this.types.schemaBuilder().staticInvoke("string"), this.types.schema().staticRef("STRING_SCHEMA"), "toString", "fromString",
         "anySimpleType", "normalizedString", "anyURI", "ENTITY", "Name", "NCName", "token",
-        "ID", "IDREF", "language", "NMTOKEN"
+        "ID", "IDREF", "language", "NMTOKEN", "string"
     );
     add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgDay", "fromXmlgDay", "gDay");
     add(result, this.types.schemaBuilder().staticInvoke("int32"), this.types.schema().staticRef("INT32_SCHEMA"), "toXmlgMonth", "fromXmlgMonth", "gMonth");
@@ -205,15 +218,14 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     return ImmutableMap.copyOf(result);
   }
 
-  void setupImportedClasses(JCodeModel codeModel) {
+  private void setupImportedClasses(JCodeModel codeModel) {
     this.types = Types.build(codeModel);
     this.jTypeLookup = buildTypeLookup(codeModel);
     this.xmlTypeLookup = buildXmlTypeLookup();
   }
 
-  void processToStruct(JFieldVar schemaField, JCodeModel codeModel, ClassOutline classOutline, List<FieldState> fieldStates) {
-
-    final JMethod method = classOutline.implClass.method(JMod.PUBLIC, this.types.struct(), TO_CONNECT_STRUCT);
+  private void processToStruct(JFieldVar schemaField, JDefinedClass definedClass, List<FieldState> fieldStates) {
+    final JMethod method = definedClass.method(JMod.PUBLIC, this.types.struct(), TO_CONNECT_STRUCT);
     method.annotate(Override.class);
     final JBlock methodBody = method.body();
     final JVar structVar = methodBody.decl(this.types.struct(), "struct", JExpr._new(this.types.struct()).arg(schemaField));
@@ -235,8 +247,8 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     methodBody._return(structVar);
   }
 
-  void processFromStruct(JCodeModel codeModel, ClassOutline classOutline, List<FieldState> fieldStates) {
-    final JMethod method = classOutline.implClass.method(JMod.PUBLIC, void.class, FROM_CONNECT_STRUCT);
+  private void processFromStruct(JDefinedClass definedClass, List<FieldState> fieldStates) {
+    final JMethod method = definedClass.method(JMod.PUBLIC, void.class, FROM_CONNECT_STRUCT);
     final JVar structVar = method.param(this.types.struct(), "struct");
     method.annotate(Override.class);
     final JBlock methodBody = method.body();
@@ -257,12 +269,11 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     }
   }
 
-
   @SuppressFBWarnings
-  State type(JCodeModel codeModel, ClassOutline classOutline, JFieldVar field, JType type) {
+  private State type(JClass definedClass, JFieldVar field, JType type) {
     log.trace("type() - type = '{}'", type);
     if (this.types.blackListTypes().contains(type)) {
-      throw new TypeTooGenericException(classOutline, field, null, type);
+      throw new TypeTooGenericException(definedClass, field, null, type);
     }
 
     State result = this.jTypeLookup.get(type);
@@ -309,14 +320,9 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
       final JClass basis;
       final List<JClass> args;
       try {
-        Class<?> jnarrowedCls = Class.forName("com.sun.codemodel.JNarrowedClass");
-        java.lang.reflect.Field basisField = jnarrowedCls.getDeclaredField("basis");
-        basisField.setAccessible(true);
-        java.lang.reflect.Field argsField = jnarrowedCls.getDeclaredField("args");
-        argsField.setAccessible(true);
-        basis = (JClass) basisField.get(jClass);
-        args = (List<JClass>) argsField.get(jClass);
-      } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
+        args = (List<JClass>) ARGS_FIELD.get(jClass);
+        basis = (JClass) BASIS_FIELD.get(jClass);
+      } catch (IllegalAccessException e) {
         throw new IllegalStateException(e);
       }
 
@@ -335,7 +341,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         this.definedTypeStateLookup.put(type, dtResult);
       } else if (this.types.list().equals(basis)) {
         JClass valueType = args.get(0);
-        State valueState = type(codeModel, classOutline, field, valueType);
+        State valueState = type(definedClass, field, valueType);
 
         JExpression valueSchema = valueState.schema();
         if (valueSchema == null) {
@@ -353,13 +359,13 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         this.definedTypeStateLookup.put(type, dtResult);
       } else if (this.types.map().equals(basis)) {
         JClass keyType = args.get(0);
-        State keyState = type(codeModel, classOutline, field, keyType);
+        State keyState = type(definedClass, field, keyType);
         JExpression keySchema = keyState.schema();
         if (keySchema == null) {
           keySchema = keyState.schemaBuilder().invoke("build");
         }
         JClass valueType = args.get(1);
-        State valueState = type(codeModel, classOutline, field, valueType);
+        State valueState = type(definedClass, field, valueType);
         JExpression valueSchema = valueState.schema();
         if (valueSchema == null) {
           valueSchema = valueState.schemaBuilder().invoke("build");
@@ -376,7 +382,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         this.definedTypeStateLookup.put(type, dtResult);
       } else {
         throw new UnsupportedTypeException(
-            classOutline,
+            definedClass,
             field,
             field.type(),
             basis
@@ -387,15 +393,14 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
 
 
     throw new UnsupportedTypeException(
-        classOutline,
+        definedClass,
         field,
         null,
         field.type()
     );
   }
 
-
-  FieldState field(JCodeModel codeModel, ClassOutline classOutline, final String fieldName, final JFieldVar jFieldVar) {
+  FieldState field(JCodeModel codeModel, JClass definedClass, final String fieldName, final JFieldVar jFieldVar) {
     try {
       log.trace("field() - processing name = '{}' type = '{}'", fieldName, jFieldVar.type().name());
       final com.github.jcustenborder.kafka.connect.xml.ImmutableFieldState.Builder fieldState = com.github.jcustenborder.kafka.connect.xml.ImmutableFieldState.builder();
@@ -417,7 +422,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
         }
         fieldState.from(xmlTypeState);
       } else {
-        State jTypeState = type(codeModel, classOutline, jFieldVar, jFieldVar.type());
+        State jTypeState = type(definedClass, jFieldVar, jFieldVar.type());
 
         if (null != jTypeState) {
           fieldState.from(jTypeState);
@@ -425,7 +430,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
           log.warn("Nothing for {}", jFieldVar.type().fullName());
         } else {
           throw new UnsupportedTypeException(
-              classOutline,
+              definedClass,
               jFieldVar,
               null,
               jFieldVar.type()
@@ -439,7 +444,7 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
           String.format(
               "Exception thrown while building field '%s'. %s",
               fieldName,
-              classOutline.implClass.name()
+              definedClass.name()
           ),
           ex);
     }
@@ -457,9 +462,18 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
     return false;
   }
 
+  private void fields(JCodeModel codeModel, JClass cls, List<FieldState> fieldStates) {
+    final JDefinedClass definedClass;
 
-  void fields(JCodeModel codeModel, ClassOutline classOutline, List<FieldState> fieldStates) {
-    final Map<String, JFieldVar> fields = classOutline.implClass.fields();
+    if(cls instanceof JDefinedClass) {
+      definedClass = (JDefinedClass) cls;
+    } else {
+      log.trace("fields() - calling codeModel._getClass('{}');", cls.fullName());
+      definedClass = codeModel._getClass(cls.fullName());
+    }
+
+
+    final Map<String, JFieldVar> fields = definedClass.fields();
 
     for (final Map.Entry<String, JFieldVar> kvp : fields.entrySet()) {
       final String fieldName = kvp.getKey();
@@ -468,21 +482,52 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
       }
 
       final JFieldVar jFieldVar = kvp.getValue();
-      final FieldState fieldState = field(codeModel, classOutline, fieldName, jFieldVar);
+
+      if (this.ignoreAnyTypeFields) {
+        if (CLASS_JNARROWED.equals(jFieldVar.type().getClass())) {
+          final JClass jClass = (JClass) jFieldVar.type();
+          final JClass basis;
+          final List<JClass> argClasses;
+          try {
+            argClasses = (List<JClass>) ARGS_FIELD.get(jClass);
+            basis = (JClass) BASIS_FIELD.get(jClass);
+          } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
+          }
+
+          boolean skip = false;
+          for (JClass argClass : argClasses) {
+            if (this.types.blackListTypes().contains(argClass)) {
+              log.info("fields() - Ignoring field {} type {}", kvp.getKey(), jFieldVar.type());
+              skip = true;
+              break;
+            }
+          }
+          if (skip) {
+            continue;
+          }
+        }
+        if (this.types.blackListTypes().contains(jFieldVar.type())) {
+          log.info("fields() - Ignoring field {} type {}", kvp.getKey(), jFieldVar.type());
+          continue;
+        }
+      }
+
+      final FieldState fieldState = field(codeModel, definedClass, fieldName, jFieldVar);
       fieldStates.add(fieldState);
     }
 
-    if (classOutline.getSuperClass() != null) {
-      fields(codeModel, classOutline.getSuperClass(), fieldStates);
+    //TODO: Come back and figure out what this did.
+    if (!this.types.object().equals(definedClass._extends())) {
+      fields(codeModel, definedClass._extends(), fieldStates);
     }
   }
 
-  List<FieldState> fields(JCodeModel codeModel, ClassOutline classOutline) {
+  private List<FieldState> fields(JCodeModel codeModel, JDefinedClass definedClass) {
     List<FieldState> result = new ArrayList<>();
-    fields(codeModel, classOutline, result);
+    fields(codeModel, definedClass, result);
     return result;
   }
-
 
   @Override
   public boolean run(Outline model, Options options, ErrorHandler errorHandler) throws
@@ -491,15 +536,16 @@ public class KafkaConnectPlugin extends AbstractParameterizablePlugin {
       JCodeModel codeModel = model.getCodeModel();
       setupImportedClasses(codeModel);
       for (ClassOutline classOutline : model.getClasses()) {
-        classOutline.implClass._implements(this.types.connectable());
+        JDefinedClass definedClass = classOutline.implClass;
+        definedClass._implements(this.types.connectable());
         log.trace("run - {}", classOutline.implClass.name());
 
-        List<FieldState> fieldStates = fields(codeModel, classOutline);
+        List<FieldState> fieldStates = fields(codeModel, definedClass);
         log.trace("Found {} field(s). {}", fieldStates.size(), fieldStates);
 
-        JFieldVar schemaField = processSchema(codeModel, classOutline, fieldStates);
-        processToStruct(schemaField, codeModel, classOutline, fieldStates);
-        processFromStruct(codeModel, classOutline, fieldStates);
+        JFieldVar schemaField = processSchema(classOutline, fieldStates);
+        processToStruct(schemaField, definedClass, fieldStates);
+        processFromStruct(definedClass, fieldStates);
       }
       return true;
     } catch (Exception e) {

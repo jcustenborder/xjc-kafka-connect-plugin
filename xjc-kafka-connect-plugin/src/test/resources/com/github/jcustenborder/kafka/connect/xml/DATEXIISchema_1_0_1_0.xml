@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<d2lm:d2LogicalModel xmlns:d2lm="http://datex2.eu/schema/1_0/1_0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xalan="http://xml.apache.org/xslt" xmlns:java="http://xml.apache.org/xalan/java" modelBaseVersion="1.0" xsi:schemaLocation="http://datex2.eu/schema/1_0/1_0 http://datex2.eu/schema/1_0/1_0/DATEXIISchema_1_0_1_0.xsd">
+    <d2lm:exchange>
+        <d2lm:supplierIdentification>
+            <d2lm:country>gb</d2lm:country>
+            <d2lm:nationalIdentifier>TIH Toolkit</d2lm:nationalIdentifier>
+        </d2lm:supplierIdentification>
+    </d2lm:exchange>
+    <d2lm:payloadPublication lang="en" xsi:type="d2lm:SituationPublication">
+        <d2lm:publicationTime>2020-09-08T13:21:02</d2lm:publicationTime>
+        <d2lm:publicationCreator>
+            <d2lm:country>gb</d2lm:country>
+            <d2lm:nationalIdentifier>TIH Toolkit</d2lm:nationalIdentifier>
+        </d2lm:publicationCreator>
+        <d2lm:situation id="LEEDSCP0042">
+            <d2lm:headerInformation>
+                <d2lm:confidentiality>noRestriction</d2lm:confidentiality>
+                <d2lm:informationStatus>real</d2lm:informationStatus>
+            </d2lm:headerInformation>
+            <d2lm:situationRecord id="LEEDSCP0042_1" xsi:type="d2lm:CarParks">
+                <d2lm:situationRecordCreationTime>2020-09-08T14:19:11</d2lm:situationRecordCreationTime>
+                <d2lm:situationRecordVersion>1</d2lm:situationRecordVersion>
+                <d2lm:situationRecordVersionTime>2020-09-08T14:19:11</d2lm:situationRecordVersionTime>
+                <d2lm:situationRecordFirstSupplierVersionTime>2020-09-08T14:19:11</d2lm:situationRecordFirstSupplierVersionTime>
+                <d2lm:probabilityOfOccurrence>certain</d2lm:probabilityOfOccurrence>
+                <d2lm:validity>
+                    <d2lm:validityStatus>active</d2lm:validityStatus>
+                    <d2lm:validityTimeSpecification>
+                        <d2lm:overallStartTime>2020-09-08T14:19:11</d2lm:overallStartTime>
+                    </d2lm:validityTimeSpecification>
+                </d2lm:validity>
+                <d2lm:groupOfLocations>
+                    <d2lm:locationContainedInGroup xsi:type="d2lm:Point">
+                        <d2lm:pointByCoordinates>
+                            <d2lm:pointCoordinates>
+                                <d2lm:latitude>53.798405210220615</d2lm:latitude>
+                                <d2lm:longitude>-1.5363056358479612</d2lm:longitude>
+                            </d2lm:pointCoordinates>
+                        </d2lm:pointByCoordinates>
+                    </d2lm:locationContainedInGroup>
+                </d2lm:groupOfLocations>
+                <d2lm:carParkIdentity>Victoria:LEEDSCP0042</d2lm:carParkIdentity>
+                <d2lm:carParkOccupancy>39</d2lm:carParkOccupancy>
+                <d2lm:carParkStatus>enoughSpacesAvailable</d2lm:carParkStatus>
+                <d2lm:occupiedSpaces>318</d2lm:occupiedSpaces>
+                <d2lm:totalCapacity>803</d2lm:totalCapacity>
+            </d2lm:situationRecord>
+        </d2lm:situation>
+        <d2lm:situation id="LEEDSCP0016">
+            <d2lm:headerInformation>
+                <d2lm:confidentiality>noRestriction</d2lm:confidentiality>
+                <d2lm:informationStatus>real</d2lm:informationStatus>
+            </d2lm:headerInformation>
+            <d2lm:situationRecord id="LEEDSCP0016_1" xsi:type="d2lm:CarParks">
+                <d2lm:situationRecordCreationTime>2020-09-08T14:19:11</d2lm:situationRecordCreationTime>
+                <d2lm:situationRecordVersion>1</d2lm:situationRecordVersion>
+                <d2lm:situationRecordVersionTime>2020-09-08T14:19:11</d2lm:situationRecordVersionTime>
+                <d2lm:situationRecordFirstSupplierVersionTime>2020-09-08T14:19:11</d2lm:situationRecordFirstSupplierVersionTime>
+                <d2lm:probabilityOfOccurrence>certain</d2lm:probabilityOfOccurrence>
+                <d2lm:validity>
+                    <d2lm:validityStatus>active</d2lm:validityStatus>
+                    <d2lm:validityTimeSpecification>
+                        <d2lm:overallStartTime>2020-09-08T14:19:11</d2lm:overallStartTime>
+                    </d2lm:validityTimeSpecification>
+                </d2lm:validity>
+                <d2lm:groupOfLocations>
+                    <d2lm:locationContainedInGroup xsi:type="d2lm:Point">
+                        <d2lm:pointByCoordinates>
+                            <d2lm:pointCoordinates>
+                                <d2lm:latitude>53.796099739322564</d2lm:latitude>
+                                <d2lm:longitude>-1.5589359172142963</d2lm:longitude>
+                            </d2lm:pointCoordinates>
+                        </d2lm:pointByCoordinates>
+                    </d2lm:locationContainedInGroup>
+                </d2lm:groupOfLocations>
+                <d2lm:carParkIdentity>Wellington Place:LEEDSCP0016</d2lm:carParkIdentity>
+                <d2lm:carParkOccupancy>76</d2lm:carParkOccupancy>
+                <d2lm:carParkStatus>enoughSpacesAvailable</d2lm:carParkStatus>
+                <d2lm:occupiedSpaces>386</d2lm:occupiedSpaces>
+                <d2lm:totalCapacity>507</d2lm:totalCapacity>
+            </d2lm:situationRecord>
+        </d2lm:situation>
+        <d2lm:situation id="LEEDSCP0014">
+            <d2lm:headerInformation>
+                <d2lm:confidentiality>noRestriction</d2lm:confidentiality>
+                <d2lm:informationStatus>real</d2lm:informationStatus>
+            </d2lm:headerInformation>
+            <d2lm:situationRecord id="LEEDSCP0014_1" xsi:type="d2lm:CarParks">
+                <d2lm:situationRecordCreationTime>2020-09-08T14:19:11</d2lm:situationRecordCreationTime>
+                <d2lm:situationRecordVersion>1</d2lm:situationRecordVersion>
+                <d2lm:situationRecordVersionTime>2020-09-08T14:19:11</d2lm:situationRecordVersionTime>
+                <d2lm:situationRecordFirstSupplierVersionTime>2020-09-08T14:19:11</d2lm:situationRecordFirstSupplierVersionTime>
+                <d2lm:probabilityOfOccurrence>certain</d2lm:probabilityOfOccurrence>
+                <d2lm:validity>
+                    <d2lm:validityStatus>active</d2lm:validityStatus>
+                    <d2lm:validityTimeSpecification>
+                        <d2lm:overallStartTime>2020-09-08T14:19:11</d2lm:overallStartTime>
+                    </d2lm:validityTimeSpecification>
+                </d2lm:validity>
+                <d2lm:groupOfLocations>
+                    <d2lm:locationContainedInGroup xsi:type="d2lm:Point">
+                        <d2lm:pointByCoordinates>
+                            <d2lm:pointCoordinates>
+                                <d2lm:latitude>53.795147075173155</d2lm:latitude>
+                                <d2lm:longitude>-1.544524058364228</d2lm:longitude>
+                            </d2lm:pointCoordinates>
+                        </d2lm:pointByCoordinates>
+                    </d2lm:locationContainedInGroup>
+                </d2lm:groupOfLocations>
+                <d2lm:carParkIdentity>Trinity Leeds:LEEDSCP0014</d2lm:carParkIdentity>
+                <d2lm:carParkOccupancy>95</d2lm:carParkOccupancy>
+                <d2lm:carParkStatus>enoughSpacesAvailable</d2lm:carParkStatus>
+                <d2lm:occupiedSpaces>544</d2lm:occupiedSpaces>
+                <d2lm:totalCapacity>570</d2lm:totalCapacity>
+            </d2lm:situationRecord>
+        </d2lm:situation>
+        <d2lm:situation id="LEEDSCP0011">
+            <d2lm:headerInformation>
+                <d2lm:confidentiality>noRestriction</d2lm:confidentiality>
+                <d2lm:informationStatus>real</d2lm:informationStatus>
+            </d2lm:headerInformation>
+            <d2lm:situationRecord id="LEEDSCP0011_1" xsi:type="d2lm:CarParks">
+                <d2lm:situationRecordCreationTime>2020-09-08T14:19:11</d2lm:situationRecordCreationTime>
+                <d2lm:situationRecordVersion>1</d2lm:situationRecordVersion>
+                <d2lm:situationRecordVersionTime>2020-09-08T14:19:11</d2lm:situationRecordVersionTime>
+                <d2lm:situationRecordFirstSupplierVersionTime>2020-09-08T14:19:11</d2lm:situationRecordFirstSupplierVersionTime>
+                <d2lm:probabilityOfOccurrence>certain</d2lm:probabilityOfOccurrence>
+                <d2lm:validity>
+                    <d2lm:validityStatus>active</d2lm:validityStatus>
+                    <d2lm:validityTimeSpecification>
+                        <d2lm:overallStartTime>2020-09-08T14:19:11</d2lm:overallStartTime>
+                    </d2lm:validityTimeSpecification>
+                </d2lm:validity>
+                <d2lm:groupOfLocations>
+                    <d2lm:locationContainedInGroup xsi:type="d2lm:Point">
+                        <d2lm:pointByCoordinates>
+                            <d2lm:pointCoordinates>
+                                <d2lm:latitude>53.796736964244815</d2lm:latitude>
+                                <d2lm:longitude>-1.5372197345130372</d2lm:longitude>
+                            </d2lm:pointCoordinates>
+                        </d2lm:pointByCoordinates>
+                    </d2lm:locationContainedInGroup>
+                </d2lm:groupOfLocations>
+                <d2lm:carParkIdentity>Markets Multi-Storey:LEEDSCP0011</d2lm:carParkIdentity>
+                <d2lm:carParkOccupancy>60</d2lm:carParkOccupancy>
+                <d2lm:carParkStatus>enoughSpacesAvailable</d2lm:carParkStatus>
+                <d2lm:occupiedSpaces>393</d2lm:occupiedSpaces>
+                <d2lm:totalCapacity>646</d2lm:totalCapacity>
+            </d2lm:situationRecord>
+        </d2lm:situation>
+        <d2lm:situation id="LEEDSCP0006">
+            <d2lm:headerInformation>
+                <d2lm:confidentiality>noRestriction</d2lm:confidentiality>
+                <d2lm:informationStatus>real</d2lm:informationStatus>
+            </d2lm:headerInformation>
+            <d2lm:situationRecord id="LEEDSCP0006_1" xsi:type="d2lm:CarParks">
+                <d2lm:situationRecordCreationTime>2020-09-08T14:19:11</d2lm:situationRecordCreationTime>
+                <d2lm:situationRecordVersion>1</d2lm:situationRecordVersion>
+                <d2lm:situationRecordVersionTime>2020-09-08T14:19:11</d2lm:situationRecordVersionTime>
+                <d2lm:situationRecordFirstSupplierVersionTime>2020-09-08T14:19:11</d2lm:situationRecordFirstSupplierVersionTime>
+                <d2lm:probabilityOfOccurrence>certain</d2lm:probabilityOfOccurrence>
+                <d2lm:validity>
+                    <d2lm:validityStatus>active</d2lm:validityStatus>
+                    <d2lm:validityTimeSpecification>
+                        <d2lm:overallStartTime>2020-09-08T14:19:11</d2lm:overallStartTime>
+                    </d2lm:validityTimeSpecification>
+                </d2lm:validity>
+                <d2lm:groupOfLocations>
+                    <d2lm:locationContainedInGroup xsi:type="d2lm:Point">
+                        <d2lm:pointByCoordinates>
+                            <d2lm:pointCoordinates>
+                                <d2lm:latitude>53.80536672583005</d2lm:latitude>
+                                <d2lm:longitude>-1.5469643742033297</d2lm:longitude>
+                            </d2lm:pointCoordinates>
+                        </d2lm:pointByCoordinates>
+                    </d2lm:locationContainedInGroup>
+                </d2lm:groupOfLocations>
+                <d2lm:carParkIdentity>Woodhouse Lane:LEEDSCP0006</d2lm:carParkIdentity>
+                <d2lm:carParkOccupancy>66</d2lm:carParkOccupancy>
+                <d2lm:carParkStatus>enoughSpacesAvailable</d2lm:carParkStatus>
+                <d2lm:occupiedSpaces>829</d2lm:occupiedSpaces>
+                <d2lm:totalCapacity>1240</d2lm:totalCapacity>
+            </d2lm:situationRecord>
+        </d2lm:situation>
+        <d2lm:situation id="LEEDSCP0004">
+            <d2lm:headerInformation>
+                <d2lm:confidentiality>noRestriction</d2lm:confidentiality>
+                <d2lm:informationStatus>real</d2lm:informationStatus>
+            </d2lm:headerInformation>
+            <d2lm:situationRecord id="LEEDSCP0004_1" xsi:type="d2lm:CarParks">
+                <d2lm:situationRecordCreationTime>2020-09-08T14:19:11</d2lm:situationRecordCreationTime>
+                <d2lm:situationRecordVersion>1</d2lm:situationRecordVersion>
+                <d2lm:situationRecordVersionTime>2020-09-08T14:19:11</d2lm:situationRecordVersionTime>
+                <d2lm:situationRecordFirstSupplierVersionTime>2020-09-08T14:19:11</d2lm:situationRecordFirstSupplierVersionTime>
+                <d2lm:probabilityOfOccurrence>certain</d2lm:probabilityOfOccurrence>
+                <d2lm:validity>
+                    <d2lm:validityStatus>active</d2lm:validityStatus>
+                    <d2lm:validityTimeSpecification>
+                        <d2lm:overallStartTime>2020-09-08T14:19:11</d2lm:overallStartTime>
+                    </d2lm:validityTimeSpecification>
+                </d2lm:validity>
+                <d2lm:groupOfLocations>
+                    <d2lm:locationContainedInGroup xsi:type="d2lm:Point">
+                        <d2lm:pointByCoordinates>
+                            <d2lm:pointCoordinates>
+                                <d2lm:latitude>53.80230539763654</d2lm:latitude>
+                                <d2lm:longitude>-1.5431711170308535</d2lm:longitude>
+                            </d2lm:pointCoordinates>
+                        </d2lm:pointByCoordinates>
+                    </d2lm:locationContainedInGroup>
+                </d2lm:groupOfLocations>
+                <d2lm:carParkIdentity>Merrion Centre:LEEDSCP0004</d2lm:carParkIdentity>
+                <d2lm:carParkOccupancy>63</d2lm:carParkOccupancy>
+                <d2lm:carParkStatus>enoughSpacesAvailable</d2lm:carParkStatus>
+                <d2lm:occupiedSpaces>631</d2lm:occupiedSpaces>
+                <d2lm:totalCapacity>1000</d2lm:totalCapacity>
+            </d2lm:situationRecord>
+        </d2lm:situation>
+        <d2lm:situation id="LEEDSCP0003">
+            <d2lm:headerInformation>
+                <d2lm:confidentiality>noRestriction</d2lm:confidentiality>
+                <d2lm:informationStatus>real</d2lm:informationStatus>
+            </d2lm:headerInformation>
+            <d2lm:situationRecord id="LEEDSCP0003_1" xsi:type="d2lm:CarParks">
+                <d2lm:situationRecordCreationTime>2020-09-08T14:19:11</d2lm:situationRecordCreationTime>
+                <d2lm:situationRecordVersion>1</d2lm:situationRecordVersion>
+                <d2lm:situationRecordVersionTime>2020-09-08T14:19:11</d2lm:situationRecordVersionTime>
+                <d2lm:situationRecordFirstSupplierVersionTime>2020-09-08T14:19:11</d2lm:situationRecordFirstSupplierVersionTime>
+                <d2lm:probabilityOfOccurrence>certain</d2lm:probabilityOfOccurrence>
+                <d2lm:validity>
+                    <d2lm:validityStatus>active</d2lm:validityStatus>
+                    <d2lm:validityTimeSpecification>
+                        <d2lm:overallStartTime>2020-09-08T14:19:11</d2lm:overallStartTime>
+                    </d2lm:validityTimeSpecification>
+                </d2lm:validity>
+                <d2lm:groupOfLocations>
+                    <d2lm:locationContainedInGroup xsi:type="d2lm:Point">
+                        <d2lm:pointByCoordinates>
+                            <d2lm:pointCoordinates>
+                                <d2lm:latitude>53.80033813960797</d2lm:latitude>
+                                <d2lm:longitude>-1.5434657765221977</d2lm:longitude>
+                            </d2lm:pointCoordinates>
+                        </d2lm:pointByCoordinates>
+                    </d2lm:locationContainedInGroup>
+                </d2lm:groupOfLocations>
+                <d2lm:carParkIdentity>St John's Centre:LEEDSCP0003</d2lm:carParkIdentity>
+                <d2lm:carParkOccupancy>80</d2lm:carParkOccupancy>
+                <d2lm:carParkStatus>enoughSpacesAvailable</d2lm:carParkStatus>
+                <d2lm:occupiedSpaces>228</d2lm:occupiedSpaces>
+                <d2lm:totalCapacity>285</d2lm:totalCapacity>
+            </d2lm:situationRecord>
+        </d2lm:situation>
+        <d2lm:situation id="LEEDSCP0002">
+            <d2lm:headerInformation>
+                <d2lm:confidentiality>noRestriction</d2lm:confidentiality>
+                <d2lm:informationStatus>real</d2lm:informationStatus>
+            </d2lm:headerInformation>
+            <d2lm:situationRecord id="LEEDSCP0002_1" xsi:type="d2lm:CarParks">
+                <d2lm:situationRecordCreationTime>2020-09-08T14:19:11</d2lm:situationRecordCreationTime>
+                <d2lm:situationRecordVersion>1</d2lm:situationRecordVersion>
+                <d2lm:situationRecordVersionTime>2020-09-08T14:19:11</d2lm:situationRecordVersionTime>
+                <d2lm:situationRecordFirstSupplierVersionTime>2020-09-08T14:19:11</d2lm:situationRecordFirstSupplierVersionTime>
+                <d2lm:probabilityOfOccurrence>certain</d2lm:probabilityOfOccurrence>
+                <d2lm:validity>
+                    <d2lm:validityStatus>active</d2lm:validityStatus>
+                    <d2lm:validityTimeSpecification>
+                        <d2lm:overallStartTime>2020-09-08T14:19:11</d2lm:overallStartTime>
+                    </d2lm:validityTimeSpecification>
+                </d2lm:validity>
+                <d2lm:groupOfLocations>
+                    <d2lm:locationContainedInGroup xsi:type="d2lm:Point">
+                        <d2lm:pointByCoordinates>
+                            <d2lm:pointCoordinates>
+                                <d2lm:latitude>53.79866269573607</d2lm:latitude>
+                                <d2lm:longitude>-1.5448655405371343</d2lm:longitude>
+                            </d2lm:pointCoordinates>
+                        </d2lm:pointByCoordinates>
+                    </d2lm:locationContainedInGroup>
+                </d2lm:groupOfLocations>
+                <d2lm:carParkIdentity>The Core:LEEDSCP0002</d2lm:carParkIdentity>
+                <d2lm:carParkOccupancy>82</d2lm:carParkOccupancy>
+                <d2lm:carParkStatus>enoughSpacesAvailable</d2lm:carParkStatus>
+                <d2lm:occupiedSpaces>257</d2lm:occupiedSpaces>
+                <d2lm:totalCapacity>313</d2lm:totalCapacity>
+            </d2lm:situationRecord>
+        </d2lm:situation>
+        <d2lm:situation id="LEEDSCP0001">
+            <d2lm:headerInformation>
+                <d2lm:confidentiality>noRestriction</d2lm:confidentiality>
+                <d2lm:informationStatus>real</d2lm:informationStatus>
+            </d2lm:headerInformation>
+            <d2lm:situationRecord id="LEEDSCP0001_1" xsi:type="d2lm:CarParks">
+                <d2lm:situationRecordCreationTime>2020-09-08T14:19:11</d2lm:situationRecordCreationTime>
+                <d2lm:situationRecordVersion>1</d2lm:situationRecordVersion>
+                <d2lm:situationRecordVersionTime>2020-09-08T14:19:11</d2lm:situationRecordVersionTime>
+                <d2lm:situationRecordFirstSupplierVersionTime>2020-09-08T14:19:11</d2lm:situationRecordFirstSupplierVersionTime>
+                <d2lm:probabilityOfOccurrence>certain</d2lm:probabilityOfOccurrence>
+                <d2lm:validity>
+                    <d2lm:validityStatus>active</d2lm:validityStatus>
+                    <d2lm:validityTimeSpecification>
+                        <d2lm:overallStartTime>2020-09-08T14:19:11</d2lm:overallStartTime>
+                    </d2lm:validityTimeSpecification>
+                </d2lm:validity>
+                <d2lm:groupOfLocations>
+                    <d2lm:locationContainedInGroup xsi:type="d2lm:Point">
+                        <d2lm:pointByCoordinates>
+                            <d2lm:pointCoordinates>
+                                <d2lm:latitude>53.79798394752138</d2lm:latitude>
+                                <d2lm:longitude>-1.546011529543302</d2lm:longitude>
+                            </d2lm:pointCoordinates>
+                        </d2lm:pointByCoordinates>
+                    </d2lm:locationContainedInGroup>
+                </d2lm:groupOfLocations>
+                <d2lm:carParkIdentity>Albion Street:LEEDSCP0001</d2lm:carParkIdentity>
+                <d2lm:carParkOccupancy>86</d2lm:carParkOccupancy>
+                <d2lm:carParkStatus>enoughSpacesAvailable</d2lm:carParkStatus>
+                <d2lm:occupiedSpaces>335</d2lm:occupiedSpaces>
+                <d2lm:totalCapacity>389</d2lm:totalCapacity>
+            </d2lm:situationRecord>
+        </d2lm:situation>
+        <d2lm:situation id="KCP13">
+            <d2lm:headerInformation>
+                <d2lm:confidentiality>noRestriction</d2lm:confidentiality>
+                <d2lm:informationStatus>real</d2lm:informationStatus>
+            </d2lm:headerInformation>
+            <d2lm:situationRecord id="KCP13_1" xsi:type="d2lm:CarParks">
+                <d2lm:situationRecordCreationTime>2020-09-08T14:20:46</d2lm:situationRecordCreationTime>
+                <d2lm:situationRecordVersion>1</d2lm:situationRecordVersion>
+                <d2lm:situationRecordVersionTime>2020-09-08T14:20:46</d2lm:situationRecordVersionTime>
+                <d2lm:situationRecordFirstSupplierVersionTime>2020-09-08T14:20:46</d2lm:situationRecordFirstSupplierVersionTime>
+                <d2lm:probabilityOfOccurrence>certain</d2lm:probabilityOfOccurrence>
+                <d2lm:validity>
+                    <d2lm:validityStatus>active</d2lm:validityStatus>
+                    <d2lm:validityTimeSpecification>
+                        <d2lm:overallStartTime>2020-09-08T14:20:46</d2lm:overallStartTime>
+                    </d2lm:validityTimeSpecification>
+                </d2lm:validity>
+                <d2lm:groupOfLocations>
+                    <d2lm:locationContainedInGroup xsi:type="d2lm:Point">
+                        <d2lm:pointByCoordinates>
+                            <d2lm:pointCoordinates>
+                                <d2lm:latitude>53.6882243052201</d2lm:latitude>
+                                <d2lm:longitude>-1.6336099285881425</d2lm:longitude>
+                            </d2lm:pointCoordinates>
+                        </d2lm:pointByCoordinates>
+                    </d2lm:locationContainedInGroup>
+                </d2lm:groupOfLocations>
+                <d2lm:carParkIdentity>Dewsbury Stn Sth:KCP13</d2lm:carParkIdentity>
+                <d2lm:carParkOccupancy>22</d2lm:carParkOccupancy>
+                <d2lm:carParkStatus>enoughSpacesAvailable</d2lm:carParkStatus>
+                <d2lm:occupiedSpaces>32</d2lm:occupiedSpaces>
+                <d2lm:totalCapacity>140</d2lm:totalCapacity>
+            </d2lm:situationRecord>
+        </d2lm:situation>
+        <d2lm:situation id="KCP12">
+            <d2lm:headerInformation>
+                <d2lm:confidentiality>noRestriction</d2lm:confidentiality>
+                <d2lm:informationStatus>real</d2lm:informationStatus>
+            </d2lm:headerInformation>
+            <d2lm:situationRecord id="KCP12_1" xsi:type="d2lm:CarParks">
+                <d2lm:situationRecordCreationTime>2020-09-08T14:19:11</d2lm:situationRecordCreationTime>
+                <d2lm:situationRecordVersion>1</d2lm:situationRecordVersion>
+                <d2lm:situationRecordVersionTime>2020-09-08T14:19:11</d2lm:situationRecordVersionTime>
+                <d2lm:situationRecordFirstSupplierVersionTime>2020-09-08T14:19:11</d2lm:situationRecordFirstSupplierVersionTime>
+                <d2lm:probabilityOfOccurrence>certain</d2lm:probabilityOfOccurrence>
+                <d2lm:validity>
+                    <d2lm:validityStatus>active</d2lm:validityStatus>
+                    <d2lm:validityTimeSpecification>
+                        <d2lm:overallStartTime>2020-09-08T14:19:11</d2lm:overallStartTime>
+                    </d2lm:validityTimeSpecification>
+                </d2lm:validity>
+                <d2lm:groupOfLocations>
+                    <d2lm:locationContainedInGroup xsi:type="d2lm:Point">
+                        <d2lm:pointByCoordinates>
+                            <d2lm:pointCoordinates>
+                                <d2lm:latitude>53.6923007906539</d2lm:latitude>
+                                <d2lm:longitude>-1.6322570483633898</d2lm:longitude>
+                            </d2lm:pointCoordinates>
+                        </d2lm:pointByCoordinates>
+                    </d2lm:locationContainedInGroup>
+                </d2lm:groupOfLocations>
+                <d2lm:carParkIdentity>Dewsbury Stn Nth:KCP12</d2lm:carParkIdentity>
+                <d2lm:carParkOccupancy>54</d2lm:carParkOccupancy>
+                <d2lm:carParkStatus>enoughSpacesAvailable</d2lm:carParkStatus>
+                <d2lm:occupiedSpaces>42</d2lm:occupiedSpaces>
+                <d2lm:totalCapacity>77</d2lm:totalCapacity>
+            </d2lm:situationRecord>
+        </d2lm:situation>
+    </d2lm:payloadPublication>
+</d2lm:d2LogicalModel>

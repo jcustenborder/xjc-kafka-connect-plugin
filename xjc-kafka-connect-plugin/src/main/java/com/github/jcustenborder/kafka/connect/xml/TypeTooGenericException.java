@@ -15,16 +15,17 @@
  */
 package com.github.jcustenborder.kafka.connect.xml;
 
+import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JType;
 import com.sun.tools.xjc.outline.ClassOutline;
 
 class TypeTooGenericException extends UnsupportedTypeException {
-  public TypeTooGenericException(ClassOutline classOutline,
+  public TypeTooGenericException(JType definedClass,
                                  JFieldVar field,
                                  JType parentType,
                                  JType type) {
-    super(classOutline, field, parentType, type);
+    super(definedClass, field, parentType, type);
   }
 
   @Override
