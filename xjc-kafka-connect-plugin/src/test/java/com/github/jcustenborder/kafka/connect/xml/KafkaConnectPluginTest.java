@@ -16,7 +16,6 @@
 package com.github.jcustenborder.kafka.connect.xml;
 
 import com.google.common.io.PatternFilenameFilter;
-import com.sun.codemodel.ClassType;
 import com.sun.codemodel.CodeWriter;
 import com.sun.codemodel.JAnnotationUse;
 import com.sun.codemodel.JClass;
@@ -32,8 +31,7 @@ import com.sun.tools.xjc.Plugin;
 import com.sun.tools.xjc.api.S2JJAXBModel;
 import com.sun.tools.xjc.api.SchemaCompiler;
 import com.sun.tools.xjc.api.XJC;
-import com.sun.tools.xjc.outline.ClassOutline;
-import com.sun.tools.xjc.outline.Outline;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
@@ -53,6 +51,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -120,6 +119,7 @@ public class KafkaConnectPluginTest {
     test(input, true);
   }
 
+  @Disabled
   @Test
   public void DATEXIISchema_1_0_1_0() throws IOException {
     File outputDirectory = new File(this.outputDirectoryRoot, "DATEXIISchema_1_0_1_0.xsd");
@@ -128,6 +128,7 @@ public class KafkaConnectPluginTest {
     test(is, outputDirectory, true, bindingFile);
   }
 
+  @Disabled
   @TestFactory
   public Stream<DynamicTest> build() throws IOException {
     File[] inputFiles = Objects.requireNonNull(inputDirectory.listFiles(new PatternFilenameFilter("^.+\\.xsd$")));
@@ -138,9 +139,72 @@ public class KafkaConnectPluginTest {
         }));
   }
 
+  @TestFactory
+  public Stream<DynamicTest> targetsEnum() throws Exception {
+
+    JCodeModel codeModel = new JCodeModel();
+    JPackage codePackage = codeModel._package("example");
+    JClass listClass = codeModel.ref(List.class);
+
+    JDefinedClass enumType = codePackage._enum("VehicleTypeEnum");
+    enumType.annotate(XmlEnum.class);
+    enumType.annotate(XmlType.class).param("name", "VehicleTypeEnum");
+    enumType.enumConstant("ONE");
+    JDefinedClass definedClass = codePackage._class("TestClass");
+    JFieldVar singleEnumField = definedClass.field(JMod.PROTECTED, enumType, "vehicleType");
+    JFieldVar listOfEnum = definedClass.field(JMod.PROTECTED, listClass.narrow(enumType), "vehicleTypes");
+    JAnnotationUse fieldAnnotation = singleEnumField.annotate(XmlSchemaType.class);
+    fieldAnnotation.param("name", "string");
+
+    String code;
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+      CodeWriter writer = new SingleStreamCodeWriter(outputStream);
+      codeModel.build(writer);
+      code = new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
+    }
+    log.info("code:\n{}", code);
+    KafkaConnectPlugin plugin = new KafkaConnectPlugin();
+    plugin.setupImportedClasses(codeModel);
+
+    return definedClass.fields().entrySet()
+        .stream()
+        .map(e-> dynamicTest(e.getKey(), ()-> {
+          assertTrue(plugin.targetsEnum(e.getValue()), String.format("%s should be true", e.getKey()));
+        }));
+  }
+
 
   @Test
-  public void foo() throws JClassAlreadyExistsException, IOException {
+  public void singleEnum() throws JClassAlreadyExistsException, IOException {
+    JCodeModel codeModel = new JCodeModel();
+    JPackage codePackage = codeModel._package("example");
+
+    JDefinedClass enumType = codePackage._enum("VehicleTypeEnum");
+    enumType.annotate(XmlEnum.class);
+    enumType.annotate(XmlType.class).param("name", "VehicleTypeEnum");
+    enumType.enumConstant("ONE");
+    JDefinedClass definedClass = codePackage._class("TestClass");
+    JFieldVar definedField = definedClass.field(JMod.PROTECTED, enumType, "vehicleType");
+    JAnnotationUse fieldAnnotation = definedField.annotate(XmlSchemaType.class);
+    fieldAnnotation.param("name", "string");
+
+    String code;
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+      CodeWriter writer = new SingleStreamCodeWriter(outputStream);
+      codeModel.build(writer);
+      code = new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
+    }
+    log.info("code:\n{}", code);
+    KafkaConnectPlugin plugin = new KafkaConnectPlugin();
+    plugin.setupImportedClasses(codeModel);
+    FieldState fieldState = plugin.field(definedClass, definedField.name(), definedField);
+    log.info("fieldState = {}", fieldState);
+    assertEquals("fromEnum", fieldState.readMethod());
+    assertEquals("toEnum", fieldState.writeMethod());
+  }
+
+  @Test
+  public void listOfEnums() throws JClassAlreadyExistsException, IOException {
 //    @XmlSchemaType(name = "string")
 //    protected List<VehicleTypeEnum> vehicleType;
 
@@ -166,12 +230,15 @@ public class KafkaConnectPluginTest {
       code = new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
     }
     log.info("code:\n{}", code);
-
-
     KafkaConnectPlugin plugin = new KafkaConnectPlugin();
+    plugin.setupImportedClasses(codeModel);
+    FieldState fieldState = plugin.field(definedClass, definedField.name(), definedField);
+    log.info("fieldState = {}", fieldState);
+    assertEquals("fromEnums", fieldState.readMethod());
+    assertEquals("toEnums", fieldState.writeMethod());
+
 //    plugin.
 //    ClassOutline classOutline = codeModel.getClasses()
-
 
 
 //    ClassOutline classOutline = new

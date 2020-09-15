@@ -139,7 +139,7 @@ public class ConnectableHelper {
       result = new ArrayList<>(value.size());
       for (Object o : value) {
         if (o instanceof Connectable) {
-          result.add(((Connectable)o).toStruct());
+          result.add(((Connectable) o).toStruct());
         } else {
           result.add(o);
         }
@@ -165,9 +165,9 @@ public class ConnectableHelper {
           } catch (InstantiationException | IllegalAccessException e) {
             throw new IllegalStateException(e);
           }
-          ((Connectable)o).fromStruct((Struct)s);
+          ((Connectable) o).fromStruct((Struct) s);
           result.add(o);
-        } else if (cls.isInstance(s)){
+        } else if (cls.isInstance(s)) {
           result.add(cls.cast(s));
         } else {
           throw new IllegalArgumentException("Element not castable to the target class");
@@ -625,6 +625,27 @@ public class ConnectableHelper {
 
   public static <T extends Enum> T toEnum(final Struct struct, final String field, final Class<T> enumType) {
     return (T) Enum.valueOf(enumType, struct.getString(field));
+  }
+
+  public static <T extends Enum> void fromEnums(final Struct struct, final String field, final List<T> enumList) {
+    List<String> result = new ArrayList<>();
+    List<String> fieldValue = struct.getArray(field);
+    for (T enumValue : enumList) {
+      result.add(enumValue.toString());
+    }
+    struct.put(field, result);
+  }
+
+
+  public static <T extends Enum> List<T> toEnums(final Struct struct, final String field, final Class<T> enumType) {
+    List<T> result = new ArrayList<>();
+    List<String> fieldValue = struct.getArray(field);
+    for (String enumValue : fieldValue) {
+      T e = (T) Enum.valueOf(enumType, enumValue);
+      result.add(e);
+    }
+
+    return result;
   }
 
 

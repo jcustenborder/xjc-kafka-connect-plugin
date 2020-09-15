@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -56,29 +56,22 @@ import static com.sun.codemodel.JType.parse;
 public class KafkaConnectPlugin extends Plugin {
   static final String TO_CONNECT_STRUCT = "toStruct";
   static final String FROM_CONNECT_STRUCT = "fromStruct";
-  static final Class<?> CLASS_JNARROWED;
   static final Class<?> CLASS_JREFERENCEDCLASS;
   private static final Logger log = LoggerFactory.getLogger(KafkaConnectPlugin.class);
   private static final String CONNECT_SCHEMA_FIELD = "CONNECT_SCHEMA";
-  private static final Class<?> JNARROWED_CLS;
-  private static final java.lang.reflect.Field BASIS_FIELD;
-  private static final java.lang.reflect.Field ARGS_FIELD;
+
   private Types types;
   private Map<JType, StaticTypeState> jTypeLookup;
   private Map<String, XmlTypeState> xmlTypeLookup;
   private Map<JType, DefinedTypeState> definedTypeStateLookup = new HashMap<>();
   private boolean ignoreAnyTypeFields;
+  private JCodeModel codeModel;
+  private AnnotationUtils annotationUtils;
 
   static {
     try {
-      CLASS_JNARROWED = Class.forName("com.sun.codemodel.JNarrowedClass");
       CLASS_JREFERENCEDCLASS = Class.forName("com.sun.codemodel.JCodeModel$JReferencedClass");
-      JNARROWED_CLS = Class.forName("com.sun.codemodel.JNarrowedClass");
-      BASIS_FIELD = JNARROWED_CLS.getDeclaredField("basis");
-      BASIS_FIELD.setAccessible(true);
-      ARGS_FIELD = JNARROWED_CLS.getDeclaredField("args");
-      ARGS_FIELD.setAccessible(true);
-    } catch (ClassNotFoundException | NoSuchFieldException e) {
+    } catch (ClassNotFoundException e) {
       throw new IllegalStateException(e);
     }
   }
@@ -218,7 +211,9 @@ public class KafkaConnectPlugin extends Plugin {
     return ImmutableMap.copyOf(result);
   }
 
-  private void setupImportedClasses(JCodeModel codeModel) {
+  void setupImportedClasses(JCodeModel codeModel) {
+    this.codeModel = codeModel;
+    this.annotationUtils = new AnnotationUtils(codeModel);
     this.types = Types.build(codeModel);
     this.jTypeLookup = buildTypeLookup(codeModel);
     this.xmlTypeLookup = buildXmlTypeLookup();
@@ -309,27 +304,19 @@ public class KafkaConnectPlugin extends Plugin {
       return dtResult;
     }
 
-    if (CLASS_JNARROWED.equals(type.getClass())) {
+    if (NarrowedTypeInfo.isNarrow(type)) {
+
       DefinedTypeState dtResult = this.definedTypeStateLookup.get(type);
       if (null != dtResult) {
         return dtResult;
       }
       log.trace("type() - type is CLASS_JNARROWED. type = '{}'", type);
-
-      final JClass jClass = (JClass) field.type();
-      final JClass basis;
-      final List<JClass> args;
-      try {
-        args = (List<JClass>) ARGS_FIELD.get(jClass);
-        basis = (JClass) BASIS_FIELD.get(jClass);
-      } catch (IllegalAccessException e) {
-        throw new IllegalStateException(e);
-      }
+      NarrowedTypeInfo narrowedTypeInfo = NarrowedTypeInfo.of(type);
 
       ImmutableDefinedTypeState.Builder builder = ImmutableDefinedTypeState.builder()
           .type(type);
 
-      if (this.types.qNameMap().equals(jClass)) {
+      if (this.types.qNameMap().equals(type)) {
         // This case pops up when anyattribute is in use.
         JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("map")
             .arg(this.types.connectableHelper().staticRef("QNAME_SCHEMA"))
@@ -339,8 +326,8 @@ public class KafkaConnectPlugin extends Plugin {
         builder.writeMethod("fromQNameMap");
         dtResult = builder.build();
         this.definedTypeStateLookup.put(type, dtResult);
-      } else if (this.types.list().equals(basis)) {
-        JClass valueType = args.get(0);
+      } else if (this.types.list().equals(narrowedTypeInfo.basis)) {
+        JClass valueType = narrowedTypeInfo.argClasses.get(0);
         State valueState = type(definedClass, field, valueType);
 
         JExpression valueSchema = valueState.schema();
@@ -350,21 +337,26 @@ public class KafkaConnectPlugin extends Plugin {
         JInvocation schemaBuilder = this.types.schemaBuilder().staticInvoke("array")
             .arg(valueSchema);
         builder.schemaBuilder(schemaBuilder);
-        builder.readMethod("toArray");
-        builder.writeMethod("fromArray");
+        if (targetsEnum(field)) {
+          builder.readMethod("fromEnums");
+          builder.writeMethod("toEnums");
+        } else {
+          builder.readMethod("toArray");
+          builder.writeMethod("fromArray");
+        }
         builder.addWriteMethodArgs(valueType.dotclass());
 
 
         dtResult = builder.build();
         this.definedTypeStateLookup.put(type, dtResult);
-      } else if (this.types.map().equals(basis)) {
-        JClass keyType = args.get(0);
+      } else if (this.types.map().equals(narrowedTypeInfo.basis)) {
+        JClass keyType = narrowedTypeInfo.argClasses.get(0);
         State keyState = type(definedClass, field, keyType);
         JExpression keySchema = keyState.schema();
         if (keySchema == null) {
           keySchema = keyState.schemaBuilder().invoke("build");
         }
-        JClass valueType = args.get(1);
+        JClass valueType = narrowedTypeInfo.argClasses.get(1);
         State valueState = type(definedClass, field, valueType);
         JExpression valueSchema = valueState.schema();
         if (valueSchema == null) {
@@ -385,7 +377,7 @@ public class KafkaConnectPlugin extends Plugin {
             definedClass,
             field,
             field.type(),
-            basis
+            narrowedTypeInfo.basis
         );
       }
       return dtResult;
@@ -400,13 +392,13 @@ public class KafkaConnectPlugin extends Plugin {
     );
   }
 
-  FieldState field(JCodeModel codeModel, JClass definedClass, final String fieldName, final JFieldVar jFieldVar) {
+  FieldState field(JClass definedClass, final String fieldName, final JFieldVar jFieldVar) {
     try {
       log.trace("field() - processing name = '{}' type = '{}'", fieldName, jFieldVar.type().name());
       final com.github.jcustenborder.kafka.connect.xml.ImmutableFieldState.Builder fieldState = com.github.jcustenborder.kafka.connect.xml.ImmutableFieldState.builder();
-      final String name = AnnotationUtils.name(codeModel, jFieldVar, fieldName);
-      final boolean required = AnnotationUtils.required(codeModel, jFieldVar);
-      final String xmlType = AnnotationUtils.xmlType(codeModel, jFieldVar);
+      final String name = this.annotationUtils.name(jFieldVar, fieldName);
+      final boolean required = this.annotationUtils.required(jFieldVar);
+      final String xmlType = this.annotationUtils.xmlType(jFieldVar);
 
       fieldState.required(required);
       fieldState.name(name);
@@ -454,18 +446,27 @@ public class KafkaConnectPlugin extends Plugin {
     return ClassType.ENUM == cls.getClassType();
   }
 
-  private boolean targetsEnum(JFieldVar field) {
-    if (field.type() instanceof JDefinedClass) {
-      return targetsEnum((JDefinedClass) field.type());
+  boolean targetsEnum(JFieldVar field) {
+    JType fieldType = field.type();
+
+    if (NarrowedTypeInfo.isNarrow(field.type())) {
+      NarrowedTypeInfo narrowedTypeInfo = NarrowedTypeInfo.of(field.type());
+      JClass listClass = this.codeModel.ref(List.class);
+      if (listClass.equals(narrowedTypeInfo.basis)) {
+        fieldType = narrowedTypeInfo.argClasses.get(0);
+      }
+    }
+    if (fieldType instanceof JDefinedClass) {
+      return targetsEnum((JDefinedClass) fieldType);
     }
 
     return false;
   }
 
-  private void fields(JCodeModel codeModel, JClass cls, List<FieldState> fieldStates) {
+  private void fields(JClass cls, List<FieldState> fieldStates) {
     final JDefinedClass definedClass;
 
-    if(cls instanceof JDefinedClass) {
+    if (cls instanceof JDefinedClass) {
       definedClass = (JDefinedClass) cls;
     } else {
       log.trace("fields() - calling codeModel._getClass('{}');", cls.fullName());
@@ -484,19 +485,11 @@ public class KafkaConnectPlugin extends Plugin {
       final JFieldVar jFieldVar = kvp.getValue();
 
       if (this.ignoreAnyTypeFields) {
-        if (CLASS_JNARROWED.equals(jFieldVar.type().getClass())) {
-          final JClass jClass = (JClass) jFieldVar.type();
-          final JClass basis;
-          final List<JClass> argClasses;
-          try {
-            argClasses = (List<JClass>) ARGS_FIELD.get(jClass);
-            basis = (JClass) BASIS_FIELD.get(jClass);
-          } catch (IllegalAccessException e) {
-            throw new IllegalStateException(e);
-          }
+        if (NarrowedTypeInfo.isNarrow(jFieldVar.type())) {
+          NarrowedTypeInfo narrowedTypeInfo = NarrowedTypeInfo.of(jFieldVar.type());
 
           boolean skip = false;
-          for (JClass argClass : argClasses) {
+          for (JClass argClass : narrowedTypeInfo.argClasses) {
             if (this.types.blackListTypes().contains(argClass)) {
               log.info("fields() - Ignoring field {} type {}", kvp.getKey(), jFieldVar.type());
               skip = true;
@@ -513,19 +506,19 @@ public class KafkaConnectPlugin extends Plugin {
         }
       }
 
-      final FieldState fieldState = field(codeModel, definedClass, fieldName, jFieldVar);
+      final FieldState fieldState = field(definedClass, fieldName, jFieldVar);
       fieldStates.add(fieldState);
     }
 
     //TODO: Come back and figure out what this did.
     if (!this.types.object().equals(definedClass._extends())) {
-      fields(codeModel, definedClass._extends(), fieldStates);
+      fields(definedClass._extends(), fieldStates);
     }
   }
 
-  private List<FieldState> fields(JCodeModel codeModel, JDefinedClass definedClass) {
+  private List<FieldState> fields(JDefinedClass definedClass) {
     List<FieldState> result = new ArrayList<>();
-    fields(codeModel, definedClass, result);
+    fields(definedClass, result);
     return result;
   }
 
@@ -534,13 +527,14 @@ public class KafkaConnectPlugin extends Plugin {
       SAXException {
     try {
       JCodeModel codeModel = model.getCodeModel();
+
       setupImportedClasses(codeModel);
       for (ClassOutline classOutline : model.getClasses()) {
         JDefinedClass definedClass = classOutline.implClass;
         definedClass._implements(this.types.connectable());
         log.trace("run - {}", classOutline.implClass.name());
 
-        List<FieldState> fieldStates = fields(codeModel, definedClass);
+        List<FieldState> fieldStates = fields(definedClass);
         log.trace("Found {} field(s). {}", fieldStates.size(), fieldStates);
 
         JFieldVar schemaField = processSchema(classOutline, fieldStates);

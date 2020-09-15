@@ -36,13 +36,18 @@ import java.util.Map;
 class AnnotationUtils {
   private static final Logger log = LoggerFactory.getLogger(AnnotationUtils.class);
 
+  private final JCodeModel codeModel;
 
-  public static Map<String, Object> xmlSchemaType(JCodeModel codeModel, JFieldVar field) {
-    return annotationAttributes(codeModel, field, XmlSchemaType.class);
+  AnnotationUtils(JCodeModel codeModel) {
+    this.codeModel = codeModel;
   }
 
-  public static Map<String, Object> xmlAttribute(JCodeModel codeModel, JFieldVar field) {
-    final Map<String, Object> result = annotationAttributes(codeModel, field, XmlAttribute.class);
+  public Map<String, Object> xmlSchemaType(JFieldVar field) {
+    return annotationAttributes(field, XmlSchemaType.class);
+  }
+
+  public Map<String, Object> xmlAttribute(JFieldVar field) {
+    final Map<String, Object> result = annotationAttributes(field, XmlAttribute.class);
     if (null == result) {
       return null;
     }
@@ -55,8 +60,8 @@ class AnnotationUtils {
     return result;
   }
 
-  public static Map<String, Object> xmlElement(JCodeModel codeModel, JFieldVar field) {
-    final Map<String, Object> result = annotationAttributes(codeModel, field, XmlElement.class);
+  public Map<String, Object> xmlElement(JFieldVar field) {
+    final Map<String, Object> result = annotationAttributes(field, XmlElement.class);
     if (null == result) {
       return null;
     }
@@ -69,14 +74,14 @@ class AnnotationUtils {
     return result;
   }
 
-  public static boolean required(JCodeModel codeModel, JFieldVar field) {
-    final Map<String, Object> xmlElementValues = xmlElement(codeModel, field);
+  public boolean required(JFieldVar field) {
+    final Map<String, Object> xmlElementValues = xmlElement(field);
 
     if (null != xmlElementValues && !xmlElementValues.isEmpty()) {
       return (boolean) xmlElementValues.getOrDefault("required", false);
     }
 
-    final Map<String, Object> xmlAttributeValues = xmlAttribute(codeModel, field);
+    final Map<String, Object> xmlAttributeValues = xmlAttribute(field);
 
     if (null != xmlAttributeValues && !xmlAttributeValues.isEmpty()) {
       return (boolean) xmlAttributeValues.getOrDefault("required", false);
@@ -85,14 +90,14 @@ class AnnotationUtils {
     return false;
   }
 
-  public static String name(JCodeModel codeModel, JFieldVar field, String fieldName) {
-    final Map<String, Object> xmlElementValues = xmlElement(codeModel, field);
+  public String name(JFieldVar field, String fieldName) {
+    final Map<String, Object> xmlElementValues = xmlElement(field);
 
     if (null != xmlElementValues && !xmlElementValues.isEmpty()) {
       return (String) xmlElementValues.getOrDefault("name", fieldName);
     }
 
-    final Map<String, Object> xmlAttributeValues = xmlAttribute(codeModel, field);
+    final Map<String, Object> xmlAttributeValues = xmlAttribute(field);
 
     if (null != xmlAttributeValues && !xmlAttributeValues.isEmpty()) {
       return (String) xmlAttributeValues.getOrDefault("name", fieldName);
@@ -101,8 +106,8 @@ class AnnotationUtils {
     return fieldName;
   }
 
-  public static String xmlType(JCodeModel codeModel, JFieldVar jFieldVar) {
-    final Map<String, Object> xmlSchemaTypeValues = AnnotationUtils.xmlSchemaType(codeModel, jFieldVar);
+  public String xmlType(JFieldVar jFieldVar) {
+    final Map<String, Object> xmlSchemaTypeValues = xmlSchemaType(jFieldVar);
     final String name;
     if (null != xmlSchemaTypeValues && !xmlSchemaTypeValues.isEmpty()) {
       name = (String) xmlSchemaTypeValues.get("name");
@@ -113,8 +118,7 @@ class AnnotationUtils {
     return name;
   }
 
-
-  public static Map<String, Object> annotationAttributes(JCodeModel codeModel, JFieldVar field, Class<?> cls) {
+  public Map<String, Object> annotationAttributes(JFieldVar field, Class<?> cls) {
     Preconditions.checkNotNull(field, "field cannot be null.");
     Preconditions.checkNotNull(cls, "cls cannot be null.");
     Preconditions.checkState(cls.isAnnotation(), "cls must be an annotation.");
@@ -175,7 +179,7 @@ class AnnotationUtils {
     return result;
   }
 
-  public static Map<String, Object> attributes(JFieldVar field, JClass cls) {
+  public Map<String, Object> attributes(JFieldVar field, JClass cls) {
     Preconditions.checkNotNull(field, "field cannot be null.");
     Preconditions.checkNotNull(cls, "cls cannot be null.");
 
